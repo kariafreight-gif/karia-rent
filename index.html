@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="theme-color" content="#0A0F1E"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="كرية"/>
+<title>كرية — إيجار العقارات في ليبيا</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet"/>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0A0F1E;--surface:#111827;--card:#161D2F;--border:#1E2A45;
+  --gold:#C9A84C;--gold-light:#E8C97A;--teal:#0ABFBC;
+  --smoke:#8892A4;--white:#F0EDE8;--red:#E05263;
+}
+html,body{min-height:100vh;background:var(--bg);color:var(--white);
+  font-family:'Cairo',sans-serif;direction:rtl;overflow-x:hidden}
+
+/* HEADER */
+.header{position:sticky;top:0;z-index:100;
+  background:rgba(10,15,30,0.95);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);padding:14px 20px;
+  display:flex;justify-content:space-between;align-items:center}
+.logo{font-family:'Playfair Display',serif;font-size:26px;font-weight:900;
+  background:linear-gradient(135deg,var(--gold),var(--gold-light));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.logo-sub{font-size:10px;color:var(--smoke);display:block;margin-top:-4px}
+.header-btns{display:flex;gap:10px;align-items:center}
+.btn-login{background:transparent;border:1px solid var(--border);border-radius:10px;
+  padding:8px 14px;color:var(--smoke);font-family:'Cairo',sans-serif;font-size:13px;cursor:pointer}
+.btn-list{background:linear-gradient(135deg,var(--gold),var(--gold-light));
+  border:none;border-radius:10px;padding:8px 14px;color:#000;
+  font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
+
+/* HERO */
+.hero{padding:32px 20px 24px;text-align:center}
+.hero-tag{display:inline-block;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);
+  border-radius:999px;padding:6px 16px;font-size:12px;color:var(--gold);margin-bottom:16px}
+.hero-title{font-family:'Playfair Display',serif;font-size:32px;font-weight:900;
+  line-height:1.25;margin-bottom:10px}
+.hero-title span{background:linear-gradient(135deg,var(--gold),var(--teal));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-sub{color:var(--smoke);font-size:13px;line-height:1.8;margin-bottom:20px}
+
+/* SEARCH */
+.search-wrap{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:16px}
+.search-row{display:flex;gap:10px;margin-bottom:10px}
+.search-field{flex:1;background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:12px 14px;color:var(--white);font-size:13px;
+  font-family:'Cairo',sans-serif;direction:rtl;outline:none;appearance:none}
+.search-field::placeholder{color:var(--smoke)}
+.search-dates{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.search-btn{width:100%;background:linear-gradient(135deg,var(--gold),var(--gold-light));
+  border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;
+  font-family:'Cairo',sans-serif;color:#000;cursor:pointer}
+
+/* FILTERS */
+.filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.filters::-webkit-scrollbar{display:none}
+.filter-chip{flex-shrink:0;background:var(--card);border:1px solid var(--border);
+  border-radius:999px;padding:8px 16px;font-size:12px;color:var(--smoke);
+  font-family:'Cairo',sans-serif;cursor:pointer;white-space:nowrap}
+.filter-chip.active{background:rgba(201,168,76,0.12);border-color:var(--gold);color:var(--gold)}
+
+/* STATS */
+.stats-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
+  background:var(--border);border-radius:16px;overflow:hidden}
+.stat-item{background:var(--card);padding:14px;text-align:center}
+.stat-val{font-size:20px;font-weight:900;color:var(--gold)}
+.stat-lbl{font-size:11px;color:var(--smoke);margin-top:2px}
+
+/* SECTION */
+.section{padding:0 20px 24px}
+.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.section-title{font-size:17px;font-weight:700}
+.section-link{color:var(--gold);font-size:13px;cursor:pointer}
+
+/* PROPERTY CARD */
+.prop-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.prop-card{background:var(--card);border:1px solid var(--border);border-radius:18px;
+  overflow:hidden;cursor:pointer;transition:transform 0.15s}
+.prop-card:active{transform:scale(0.97)}
+.prop-card.wide{grid-column:1/-1}
+.prop-img{width:100%;display:flex;align-items:center;justify-content:center;
+  font-size:48px;position:relative;height:140px}
+.prop-card.wide .prop-img{height:180px;font-size:64px}
+.prop-badge{position:absolute;top:10px;right:10px;background:rgba(10,15,30,0.85);
+  border:1px solid var(--border);border-radius:8px;padding:4px 10px;
+  font-size:11px;font-weight:700;backdrop-filter:blur(8px)}
+.prop-badge.featured{background:rgba(201,168,76,0.9);color:#000;border:none}
+.prop-fav{position:absolute;top:10px;left:10px;width:30px;height:30px;
+  background:rgba(10,15,30,0.7);border-radius:50%;display:flex;
+  align-items:center;justify-content:center;font-size:14px;cursor:pointer}
+.prop-body{padding:12px}
+.prop-name{font-weight:700;font-size:13px;margin-bottom:4px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prop-location{color:var(--smoke);font-size:11px;margin-bottom:8px}
+.prop-footer{display:flex;justify-content:space-between;align-items:center}
+.prop-price{color:var(--gold);font-weight:900;font-size:13px}
+.prop-price small{font-size:10px;font-weight:400;color:var(--smoke)}
+.prop-rating{font-size:11px;color:var(--smoke)}
+
+/* CATEGORIES */
+.cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.cat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:12px 6px;text-align:center;cursor:pointer}
+.cat-card:active{border-color:var(--gold)}
+.cat-icon{font-size:22px;margin-bottom:5px}
+.cat-name{font-size:11px;color:var(--smoke)}
+
+/* HOW IT WORKS */
+.steps{display:flex;flex-direction:column;gap:14px}
+.step{display:flex;align-items:flex-start;gap:12px}
+.step-num{width:34px;height:34px;border-radius:50%;background:rgba(201,168,76,0.1);
+  border:1px solid rgba(201,168,76,0.3);display:flex;align-items:center;
+  justify-content:center;color:var(--gold);font-weight:700;font-size:13px;flex-shrink:0}
+.step-text h4{font-size:13px;font-weight:700;margin-bottom:3px}
+.step-text p{color:var(--smoke);font-size:12px;line-height:1.6}
+
+/* CTA */
+.cta-banner{background:linear-gradient(135deg,rgba(201,168,76,0.1),rgba(10,191,188,0.06));
+  border:1px solid rgba(201,168,76,0.2);border-radius:20px;padding:24px;
+  margin:0 20px 24px;text-align:center}
+
+/* BOTTOM NAV */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:200;
+  background:rgba(10,15,30,0.97);backdrop-filter:blur(20px);
+  border-top:1px solid var(--border);
+  display:flex;justify-content:space-around;padding:10px 0 28px}
+.nav-btn{background:transparent;border:none;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:3px;font-family:'Cairo',sans-serif}
+.nav-icon{font-size:22px}
+.nav-label{font-size:10px;color:var(--smoke)}
+.nav-btn.active .nav-label{color:var(--gold);font-weight:700}
+
+/* PAGES */
+.page{display:none;padding-bottom:90px}
+.page.active{display:block;animation:fadeUp 0.25s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* MODAL */
+.modal{position:fixed;inset:0;z-index:500;display:none;align-items:flex-end}
+.modal.open{display:flex}
+.modal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px)}
+.modal-sheet{position:relative;background:var(--surface);border-radius:24px 24px 0 0;
+  padding:20px;width:100%;max-height:88vh;overflow-y:auto;border-top:1px solid var(--border)}
+.modal-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 18px}
+.modal-title{font-size:18px;font-weight:700;margin-bottom:16px}
+
+/* FORM */
+.form-group{margin-bottom:13px}
+.form-label{display:block;color:var(--smoke);font-size:12px;margin-bottom:5px}
+.form-field{width:100%;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:12px;padding:12px 14px;color:var(--white);font-size:14px;
+  font-family:'Cairo',sans-serif;direction:rtl;outline:none;appearance:none}
+.form-field:focus{border-color:var(--gold)}
+.form-field::placeholder{color:var(--smoke)}
+.btn-primary{width:100%;background:linear-gradient(135deg,var(--gold),var(--gold-light));
+  border:none;border-radius:14px;padding:15px;font-size:16px;font-weight:700;
+  font-family:'Cairo',sans-serif;color:#000;cursor:pointer;margin-top:4px}
+.btn-primary:disabled{opacity:0.4;cursor:not-allowed}
+.btn-secondary{width:100%;background:transparent;border:1.5px solid var(--border);
+  border-radius:14px;padding:13px;font-size:14px;color:var(--smoke);
+  font-family:'Cairo',sans-serif;cursor:pointer;margin-top:8px}
+
+/* BG GRADIENTS */
+.bg-1{background:linear-gradient(135deg,#1a1a2e,#16213e)}
+.bg-2{background:linear-gradient(135deg,#1a2a1a,#0d1f0d)}
+.bg-3{background:linear-gradient(135deg,#2a1a1a,#1f0d0d)}
+.bg-4{background:linear-gradient(135deg,#1a1a2e,#0d1a2e)}
+.bg-5{background:linear-gradient(135deg,#2a2a1a,#1f1f0d)}
+.bg-6{background:linear-gradient(135deg,#1a2a2a,#0d1f1f)}
+
+.offline-bar{position:fixed;top:0;left:0;right:0;z-index:9999;
+  background:var(--red);color:white;text-align:center;padding:8px;
+  font-size:12px;font-weight:700;display:none;font-family:'Cairo',sans-serif}
+</style>
+</head>
+<body>
+
+<div class="offline-bar" id="offline-bar">⚠ لا يوجد اتصال</div>
+
+<!-- HEADER -->
+<header class="header">
+  <div>
+    <div class="logo">كرية</div>
+    <span class="logo-sub">إيجار العقارات في ليبيا</span>
+  </div>
+  <div class="header-btns">
+    <button class="btn-login" onclick="openModal('login-modal')">دخول</button>
+    <button class="btn-list" onclick="currentUser?openOwnerPanel():openModal('list-modal')">+ أضف عقارك</button>
+  </div>
+</header>
+
+<!-- HOME PAGE -->
+<div class="page active" id="page-home">
+  <div class="hero">
+    <div class="hero-tag">🏠 عقارات للإيجار في ليبيا</div>
+    <h1 class="hero-title">ابحث عن<br/><span>مكانك المثالي</span></h1>
+    <p class="hero-sub">شقق، استراحات، وغرف للإيجار اليومي والشهري<br/>بأسعار شفافة وحجز مباشر</p>
+  </div>
+
+  <div style="padding:0 20px;margin-bottom:20px">
+    <div class="search-wrap">
+      <div class="search-row">
+        <select class="search-field" id="search-city">
+          <option value="">📍 المدينة</option>
+          <option>طرابلس</option><option>بنغازي</option><option>مصراتة</option>
+          <option>سبها</option><option>الزاوية</option><option>سرت</option>
+        </select>
+        <select class="search-field" id="search-type">
+          <option value="">🏠 النوع</option>
+          <option value="apartment">شقة</option><option value="rest">استراحة</option>
+          <option value="room">غرفة</option><option value="villa">فيلا</option>
+          <option value="chalet">شاليه</option>
+        </select>
+      </div>
+      <div class="search-dates">
+        <input type="date" class="search-field" id="search-checkin"/>
+        <input type="date" class="search-field" id="search-checkout"/>
+      </div>
+      <button class="search-btn" onclick="doSearch()">🔍 بحث</button>
+    </div>
+  </div>
+
+  <div style="padding:0 20px;margin-bottom:16px">
+    <div class="filters" id="home-filters">
+      <div class="filter-chip active" onclick="filterBy('all',this)">الكل</div>
+      <div class="filter-chip" onclick="filterBy('apartment',this)">🏢 شقق</div>
+      <div class="filter-chip" onclick="filterBy('rest',this)">🌴 استراحات</div>
+      <div class="filter-chip" onclick="filterBy('room',this)">🛏 غرف</div>
+      <div class="filter-chip" onclick="filterBy('villa',this)">🏡 فيلات</div>
+      <div class="filter-chip" onclick="filterBy('chalet',this)">⛺ شاليهات</div>
+    </div>
+  </div>
+
+  <div style="padding:0 20px;margin-bottom:20px">
+    <div class="stats-bar">
+      <div class="stat-item"><div class="stat-val" id="stat-props">--</div><div class="stat-lbl">عقار متاح</div></div>
+      <div class="stat-item"><div class="stat-val">6</div><div class="stat-lbl">مدينة</div></div>
+      <div class="stat-item"><div class="stat-val" id="stat-owners">--</div><div class="stat-lbl">مالك</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">⭐ عقارات مميزة</div>
+      <div class="section-link" onclick="navTo('search')">عرض الكل</div>
+    </div>
+    <div class="prop-grid" id="featured-grid">
+      <div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--smoke)">
+        <div style="font-size:40px;margin-bottom:10px">⏳</div>
+        <p>جاري التحميل...</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title" style="margin-bottom:14px">تصفح حسب النوع</div>
+    <div class="cat-grid">
+      <div class="cat-card" onclick="filterBy('apartment',null)"><div class="cat-icon">🏢</div><div class="cat-name">شقق</div></div>
+      <div class="cat-card" onclick="filterBy('rest',null)"><div class="cat-icon">🌴</div><div class="cat-name">استراحات</div></div>
+      <div class="cat-card" onclick="filterBy('room',null)"><div class="cat-icon">🛏</div><div class="cat-name">غرف</div></div>
+      <div class="cat-card" onclick="filterBy('villa',null)"><div class="cat-icon">🏡</div><div class="cat-name">فيلات</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title" style="margin-bottom:14px">كيف تعمل كرية؟</div>
+    <div class="steps">
+      <div class="step"><div class="step-num">١</div><div class="step-text"><h4>تصفح العقارات</h4><p>مئات العقارات في مدن ليبيا بصور حقيقية وأسعار شفافة</p></div></div>
+      <div class="step"><div class="step-num">٢</div><div class="step-text"><h4>احجز مباشرة</h4><p>أرسل طلب الحجز للمالك واتفقوا على التفاصيل</p></div></div>
+      <div class="step"><div class="step-num">٣</div><div class="step-text"><h4>استمتع بإقامتك</h4><p>انتقل للعقار وقيّم تجربتك لمساعدة الآخرين</p></div></div>
+    </div>
+  </div>
+
+  <div class="cta-banner">
+    <div style="font-size:40px;margin-bottom:10px">🏠</div>
+    <div style="font-size:17px;font-weight:700;margin-bottom:8px">لديك عقار؟ أضفه الآن</div>
+    <div style="color:var(--smoke);font-size:13px;margin-bottom:14px;line-height:1.7">سجّل عقارك مجاناً وابدأ في استقبال الحجوزات</div>
+    <button class="btn-primary" style="max-width:200px;margin:0 auto;display:block" onclick="openModal('list-modal')">أضف عقارك مجاناً</button>
+  </div>
+</div>
+
+<!-- SEARCH PAGE -->
+<div class="page" id="page-search">
+  <div style="padding:16px 20px 12px;border-bottom:1px solid var(--border)">
+    <div style="font-size:17px;font-weight:700;margin-bottom:12px">نتائج البحث</div>
+    <div class="filters">
+      <div class="filter-chip active" onclick="searchFilter('all',this)">الكل</div>
+      <div class="filter-chip" onclick="searchFilter('apartment',this)">🏢 شقق</div>
+      <div class="filter-chip" onclick="searchFilter('rest',this)">🌴 استراحات</div>
+      <div class="filter-chip" onclick="searchFilter('room',this)">🛏 غرف</div>
+      <div class="filter-chip" onclick="searchFilter('villa',this)">🏡 فيلات</div>
+    </div>
+  </div>
+  <div style="padding:16px 20px">
+    <div class="prop-grid" id="search-grid"></div>
+    <div id="no-results" style="text-align:center;padding:40px;color:var(--smoke);display:none">
+      <div style="font-size:48px;margin-bottom:12px">🔍</div>
+      <p>لا توجد نتائج — جرّب بحثاً آخر</p>
+    </div>
+  </div>
+</div>
+
+<!-- FAVORITES PAGE -->
+<div class="page" id="page-favorites">
+  <div style="padding:20px">
+    <div style="font-size:17px;font-weight:700;margin-bottom:16px">❤️ المفضلة</div>
+    <div class="prop-grid" id="favorites-grid"></div>
+    <div id="no-favorites" style="text-align:center;padding:40px;color:var(--smoke)">
+      <div style="font-size:48px;margin-bottom:12px">❤️</div>
+      <p>لا توجد عقارات في المفضلة بعد</p>
+    </div>
+  </div>
+</div>
+
+<!-- PROFILE PAGE -->
+<div class="page" id="page-profile">
+  <div style="padding:20px">
+    <div style="text-align:center;padding:24px 0">
+      <div style="font-size:60px;margin-bottom:12px">👤</div>
+      <div style="font-size:18px;font-weight:700;margin-bottom:4px" id="profile-name">مرحباً بك</div>
+      <div style="color:var(--smoke);font-size:13px" id="profile-phone">سجّل دخولك للمتابعة</div>
+    </div>
+    <button class="btn-primary" onclick="openModal('login-modal')" id="profile-login-btn">تسجيل الدخول</button>
+    <div id="profile-actions" style="display:none;margin-top:16px">
+      <button class="btn-primary" onclick="openOwnerPanel()" style="margin-bottom:8px">🏠 لوحة المالك — حجوزاتي</button>
+      <button class="btn-secondary" onclick="openModal('list-modal')">+ أضف عقاراً جديداً</button>
+      <button class="btn-secondary" style="margin-top:8px;color:var(--red);border-color:rgba(224,82,99,0.3)" onclick="doLogout()">تسجيل الخروج</button>
+    </div>
+    <div id="profile-bookings" style="display:none;margin-top:20px">
+      <div style="font-size:15px;font-weight:700;margin-bottom:12px">حجوزاتي الأخيرة</div>
+      <div id="bookings-list"><div style="color:var(--smoke);font-size:13px;text-align:center;padding:20px">لا توجد حجوزات بعد</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" id="nav-home" onclick="navTo('home')">
+    <span class="nav-icon">🏠</span><span class="nav-label">الرئيسية</span>
+  </button>
+  <button class="nav-btn" id="nav-search" onclick="navTo('search')">
+    <span class="nav-icon">🔍</span><span class="nav-label">بحث</span>
+  </button>
+  <button class="nav-btn" id="nav-favorites" onclick="navTo('favorites')">
+    <span class="nav-icon">❤️</span><span class="nav-label">المفضلة</span>
+  </button>
+  <button class="nav-btn" id="nav-profile" onclick="navTo('profile')">
+    <span class="nav-icon">👤</span><span class="nav-label">حسابي</span>
+  </button>
+</nav>
+
+<!-- LOGIN MODAL -->
+<div class="modal" id="login-modal">
+  <div class="modal-backdrop" onclick="closeModal('login-modal')"></div>
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">تسجيل الدخول</div>
+    <div class="form-group">
+      <label class="form-label">الاسم الكامل</label>
+      <input type="text" class="form-field" id="login-name" placeholder="مثال: فرج المبروك" oninput="chkLogin()"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">رقم الهاتف</label>
+      <input type="tel" class="form-field" id="login-phone" placeholder="09xxxxxxxx" oninput="chkLogin()"/>
+    </div>
+    <button class="btn-primary" id="login-btn" disabled onclick="doLogin()">دخول ✓</button>
+    <button class="btn-secondary" onclick="closeModal('login-modal')">إلغاء</button>
+  </div>
+</div>
+
+<!-- LIST PROPERTY MODAL -->
+<div class="modal" id="list-modal">
+  <div class="modal-backdrop" onclick="closeModal('list-modal')"></div>
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">أضف عقارك</div>
+    <div class="form-group">
+      <label class="form-label">اسم العقار *</label>
+      <input type="text" class="form-field" id="prop-name" placeholder="مثال: شقة الكريمية المميزة"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">النوع *</label>
+      <select class="form-field" id="prop-type">
+        <option value="">اختر النوع</option>
+        <option value="apartment">شقة</option>
+        <option value="rest">استراحة</option>
+        <option value="room">غرفة</option>
+        <option value="villa">فيلا</option>
+        <option value="chalet">شاليه</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">المدينة والمنطقة *</label>
+      <input type="text" class="form-field" id="prop-location" placeholder="مثال: طرابلس — الكريمية"/>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="form-group">
+        <label class="form-label">السعر الليلي (د.ل) *</label>
+        <input type="number" class="form-field" id="prop-price" placeholder="150"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">عدد الغرف</label>
+        <input type="number" class="form-field" id="prop-rooms" placeholder="3"/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">وصف العقار</label>
+      <textarea class="form-field" id="prop-desc" rows="3" placeholder="اكتب وصفاً مختصراً ومميزات العقار..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">رقم التواصل *</label>
+      <input type="tel" class="form-field" id="prop-phone" placeholder="09xxxxxxxx"/>
+    </div>
+    <button class="btn-primary" onclick="submitProperty()">إضافة العقار ✓</button>
+    <button class="btn-secondary" onclick="closeModal('list-modal')">إلغاء</button>
+  </div>
+</div>
+
+<!-- BOOKING MODAL -->
+<div class="modal" id="booking-modal">
+  <div class="modal-backdrop" onclick="closeModal('booking-modal')"></div>
+  <div class="modal-sheet" id="booking-content"></div>
+</div>
+
+<!-- BOOKING CONFIRM MODAL -->
+<div class="modal" id="confirm-modal">
+  <div class="modal-backdrop" onclick="closeModal('confirm-modal')"></div>
+  <div class="modal-sheet" id="confirm-content"></div>
+</div>
+
+<!-- OWNER PANEL MODAL -->
+<div class="modal" id="owner-modal">
+  <div class="modal-backdrop" onclick="closeModal('owner-modal')"></div>
+  <div class="modal-sheet" style="max-height:90vh">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🏠 لوحة المالك</div>
+    <div id="owner-bookings-list">
+      <div style="text-align:center;padding:30px;color:var(--smoke)">⏳ جاري التحميل...</div>
+    </div>
+  </div>
+</div>
+
+<!-- PROPERTY DETAIL MODAL -->
+<div class="modal" id="detail-modal">
+  <div class="modal-backdrop" onclick="closeModal('detail-modal')"></div>
+  <div class="modal-sheet" id="detail-content"></div>
+</div>
+
+<script>
+window.onerror = function(msg, url, line) {
+  if(url && url.indexOf(location.hostname) === -1) return true;
+  return false;
+};
+
+// ===== FIREBASE =====
+var db;
+try {
+  if(!firebase.apps.length) {
+    firebase.initializeApp({
+      apiKey: "AIzaSyCPFgzcEXc0A7CQR-7eOQIWT67MdO1-Bj0",
+      databaseURL: "https://maria-26135-default-rtdb.europe-west1.firebasedatabase.app",
+      authDomain: "maria-26135.firebaseapp.com",
+      projectId: "maria-26135",
+      storageBucket: "maria-26135.firebasestorage.app",
+      messagingSenderId: "989218013644",
+      appId: "1:989218013644:web:e06ceb9e237606fd4e9d69"
+    });
+  }
+  db = firebase.database();
+  db.ref('.info/connected').on('value', function(snap) {
+    var bar = document.getElementById('offline-bar');
+    if(bar) bar.style.display = snap.val() ? 'none' : 'block';
+  });
+} catch(e) {}
+
+// ===== VALIDATOR =====
+var V = {
+  phone: function(p) { return /^09[1-9]\d{7}$/.test(String(p||'').trim()); },
+  name:  function(n) { var t=String(n||'').trim(); return t.length>=2&&t.length<=60; },
+  clean: function(s) {
+    if(!s) return '—';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
+  }
+};
+
+// ===== STATE =====
+var currentUser = JSON.parse(localStorage.getItem('kariaUser')||'null');
+var favorites   = JSON.parse(localStorage.getItem('kariaFavs')||'[]');
+var allProps    = [];
+var searchFilter_active = 'all';
+
+// ===== DEMO DATA =====
+var DEMO = [
+  {id:'d1',name:'شقة الكريمية الفاخرة',type:'apartment',location:'طرابلس — الكريمية',price:120,rating:4.8,rooms:3,featured:true,phone:'0911234567'},
+  {id:'d2',name:'استراحة تاجوراء',type:'rest',location:'طرابلس — تاجوراء',price:250,rating:4.6,rooms:4,phone:'0912345678'},
+  {id:'d3',name:'غرفة فشلوم المريحة',type:'room',location:'طرابلس — فشلوم',price:60,rating:4.3,rooms:1,phone:'0913456789'},
+  {id:'d4',name:'شقة سوق الجمعة',type:'apartment',location:'طرابلس — سوق الجمعة',price:90,rating:4.5,rooms:2,phone:'0914567890'},
+  {id:'d5',name:'فيلا قرجي الفارهة',type:'villa',location:'طرابلس — قرجي',price:400,rating:4.9,rooms:6,featured:true,phone:'0915678901'},
+  {id:'d6',name:'شاليه السياحية',type:'chalet',location:'طرابلس — السياحية',price:350,rating:4.7,rooms:3,phone:'0916789012'},
+];
+
+// ===== ICONS =====
+var EMOJIS = {apartment:'🏢',rest:'🌴',room:'🛏',villa:'🏡',chalet:'⛺'};
+var COLORS  = ['bg-1','bg-2','bg-3','bg-4','bg-5','bg-6'];
+var LABELS  = {apartment:'شقة',rest:'استراحة',room:'غرفة',villa:'فيلا',chalet:'شاليه'};
+
+// ===== CARD =====
+function card(p, wide) {
+  var fav  = favorites.indexOf(p.id) > -1;
+  var em   = EMOJIS[p.type]||'🏠';
+  var col  = COLORS[Math.abs((p.id||'').charCodeAt(0)||0) % 6];
+  var lbl  = LABELS[p.type]||p.type;
+  var h    = wide ? '180px' : '140px';
+  var fs   = wide ? '64px' : '48px';
+  return '<div class="prop-card'+(wide?' wide':'')+'" onclick="openProp(\''+p.id+'\')">'+
+    '<div class="prop-img '+col+'" style="height:'+h+'">'+
+      '<span style="font-size:'+fs+'">'+em+'</span>'+
+      (p.featured?'<div class="prop-badge featured">⭐ مميز</div>':'<div class="prop-badge">'+lbl+'</div>')+
+      '<div class="prop-fav" onclick="toggleFav(event,\''+p.id+'\')">'+( fav?'❤️':'🤍')+'</div>'+
+    '</div>'+
+    '<div class="prop-body">'+
+      '<div class="prop-name">'+V.clean(p.name)+'</div>'+
+      '<div class="prop-location">📍 '+V.clean(p.location)+'</div>'+
+      '<div class="prop-footer">'+
+        '<div class="prop-price">'+V.clean(String(p.price))+' د.ل<small>/ليلة</small></div>'+
+        '<div class="prop-rating">⭐ '+(p.rating||'جديد')+'</div>'+
+      '</div>'+
+    '</div>'+
+  '</div>';
+}
+
+// ===== LOAD =====
+function loadProps() {
+  if(!db) { allProps = DEMO; render(); return; }
+  db.ref('properties').on('value', function(snap) {
+    allProps = [];
+    snap.forEach(function(p){ allProps.push(Object.assign({id:p.key},p.val())); });
+    if(!allProps.length) allProps = DEMO;
+    render();
+    updateStats();
+  });
+}
+
+function render() {
+  var featured = allProps.filter(function(p){ return p.featured; });
+  var others   = allProps.filter(function(p){ return !p.featured; });
+  var grid = document.getElementById('featured-grid');
+  if(!grid) return;
+  var html = '';
+  featured.forEach(function(p,i){ html += card(p, i===0 && featured.length===1); });
+  others.slice(0,4).forEach(function(p){ html += card(p, false); });
+  grid.innerHTML = html || '<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--smoke)">لا توجد عقارات بعد</div>';
+  updateStats();
+}
+
+function renderSearchGrid(list) {
+  var f = searchFilter_active==='all' ? list : list.filter(function(p){ return p.type===searchFilter_active; });
+  var grid = document.getElementById('search-grid');
+  var noRes = document.getElementById('no-results');
+  if(!grid) return;
+  if(!f.length){ grid.innerHTML=''; if(noRes)noRes.style.display='block'; return; }
+  if(noRes) noRes.style.display='none';
+  grid.innerHTML = f.map(function(p){ return card(p,false); }).join('');
+}
+
+function updateStats() {
+  var pe = document.getElementById('stat-props');
+  var oe = document.getElementById('stat-owners');
+  if(pe) pe.textContent = allProps.length||'--';
+  if(oe) oe.textContent = Math.max(1,Math.floor(allProps.length*0.7))||'--';
+}
+
+// ===== NAVIGATION =====
+function navTo(p) {
+  document.querySelectorAll('.page').forEach(function(el){ el.classList.remove('active'); });
+  document.querySelectorAll('.nav-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById('page-'+p).classList.add('active');
+  document.getElementById('nav-'+p).classList.add('active');
+  window.scrollTo(0,0);
+  if(p==='search') renderSearchGrid(allProps);
+  if(p==='favorites') renderFavs();
+  if(p==='profile') renderProfile();
+}
+
+// ===== MODAL =====
+function openModal(id){ var m=document.getElementById(id); if(m){m.classList.add('open');document.body.style.overflow='hidden';} }
+function closeModal(id){ var m=document.getElementById(id); if(m){m.classList.remove('open');document.body.style.overflow='';} }
+
+// ===== FILTER =====
+function filterBy(type, el) {
+  searchFilter_active = type;
+  document.querySelectorAll('#home-filters .filter-chip').forEach(function(c){ c.classList.remove('active'); });
+  if(el) el.classList.add('active');
+  renderSearchGrid(allProps);
+  navTo('search');
+}
+
+function searchFilter(type, el) {
+  searchFilter_active = type;
+  document.querySelectorAll('#page-search .filter-chip').forEach(function(c){ c.classList.remove('active'); });
+  if(el) el.classList.add('active');
+  renderSearchGrid(allProps);
+}
+
+// ===== SEARCH =====
+function doSearch() {
+  var city = document.getElementById('search-city').value;
+  var type = document.getElementById('search-type').value;
+  var res = allProps.filter(function(p){
+    var mc = !city || p.location.indexOf(city)>-1;
+    var mt = !type || p.type===type;
+    return mc && mt;
+  });
+  renderSearchGrid(res);
+  navTo('search');
+}
+
+// ===== FAVORITES =====
+function toggleFav(e, id) {
+  e.stopPropagation();
+  var i = favorites.indexOf(id);
+  if(i>-1) favorites.splice(i,1); else favorites.push(id);
+  localStorage.setItem('kariaFavs', JSON.stringify(favorites));
+  render(); renderSearchGrid(allProps);
+}
+
+function renderFavs() {
+  var fp = allProps.filter(function(p){ return favorites.indexOf(p.id)>-1; });
+  var grid = document.getElementById('favorites-grid');
+  var noF  = document.getElementById('no-favorites');
+  if(!grid) return;
+  if(!fp.length){ grid.innerHTML=''; if(noF)noF.style.display='block'; return; }
+  if(noF) noF.style.display='none';
+  grid.innerHTML = fp.map(function(p){ return card(p,false); }).join('');
+}
+
+// ===== PROPERTY DETAIL =====
+function openProp(id) {
+  var p = allProps.find(function(x){ return x.id===id; });
+  if(!p) return;
+  var em  = EMOJIS[p.type]||'🏠';
+  var col = COLORS[Math.abs((p.id||'').charCodeAt(0)||0)%6];
+  var fav = favorites.indexOf(id)>-1;
+
+  document.getElementById('detail-content').innerHTML =
+    '<div class="modal-handle"></div>'+
+    '<div class="prop-img '+col+'" style="height:220px;border-radius:16px;margin-bottom:16px">'+
+      '<span style="font-size:72px">'+em+'</span>'+
+      '<div class="prop-fav" onclick="toggleFav(event,\''+id+'\')" style="width:38px;height:38px;font-size:18px">'+(fav?'❤️':'🤍')+'</div>'+
+    '</div>'+
+    '<h2 style="font-size:19px;font-weight:900;margin-bottom:6px">'+V.clean(p.name)+'</h2>'+
+    '<div style="color:var(--smoke);font-size:13px;margin-bottom:16px">📍 '+V.clean(p.location)+'</div>'+
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">'+
+      '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center">'+
+        '<div style="color:var(--gold);font-size:17px;font-weight:900">'+p.price+'</div>'+
+        '<div style="color:var(--smoke);font-size:11px">د.ل/ليلة</div>'+
+      '</div>'+
+      '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center">'+
+        '<div style="font-size:17px;font-weight:900">'+(p.rooms||'--')+'</div>'+
+        '<div style="color:var(--smoke);font-size:11px">غرفة</div>'+
+      '</div>'+
+      '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center">'+
+        '<div style="color:var(--gold);font-size:17px;font-weight:900">⭐ '+(p.rating||'--')+'</div>'+
+        '<div style="color:var(--smoke);font-size:11px">تقييم</div>'+
+      '</div>'+
+    '</div>'+
+    (p.desc?'<p style="color:var(--smoke);font-size:13px;line-height:1.8;margin-bottom:16px">'+V.clean(p.desc)+'</p>':'')+
+    '<button class="btn-primary" onclick="bookNow(\''+id+'\')">📅 احجز الآن</button>'+
+    '<button class="btn-secondary" onclick="contactOwner(\''+V.clean(p.phone||'')+'\')">📞 تواصل مع المالك</button>';
+
+  openModal('detail-modal');
+}
+
+function bookNow(id) {
+  if(!currentUser) {
+    closeModal('detail-modal');
+    setTimeout(function(){ openModal('login-modal'); }, 300);
+    return;
+  }
+  var p = allProps.find(function(x){ return x.id===id; });
+  if(!p) return;
+
+  // فتح نموذج الحجز
+  closeModal('detail-modal');
+  setTimeout(function(){ openBookingModal(p); }, 300);
+}
+
+function openBookingModal(p) {
+  var modal = document.getElementById('booking-modal');
+  var content = document.getElementById('booking-content');
+  if(!content) return;
+
+  content.innerHTML =
+    '<div class="modal-handle"></div>'+
+    '<div class="modal-title">طلب حجز</div>'+
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:16px">'+
+      '<div style="font-weight:700;margin-bottom:4px">'+V.clean(p.name)+'</div>'+
+      '<div style="color:var(--smoke);font-size:12px">📍 '+V.clean(p.location)+'</div>'+
+      '<div style="color:var(--gold);font-weight:900;margin-top:8px">'+p.price+' د.ل / ليلة</div>'+
+    '</div>'+
+    '<div class="form-group">'+
+      '<label class="form-label">تاريخ الوصول *</label>'+
+      '<input type="date" class="form-field" id="book-checkin" oninput="calcTotal(\''+p.id+'\','+p.price+')"/>'+
+    '</div>'+
+    '<div class="form-group">'+
+      '<label class="form-label">تاريخ المغادرة *</label>'+
+      '<input type="date" class="form-field" id="book-checkout" oninput="calcTotal(\''+p.id+'\','+p.price+')"/>'+
+    '</div>'+
+    '<div class="form-group">'+
+      '<label class="form-label">عدد الأشخاص</label>'+
+      '<select class="form-field" id="book-guests">'+
+        '<option value="1">شخص واحد</option>'+
+        '<option value="2">شخصان</option>'+
+        '<option value="3">3 أشخاص</option>'+
+        '<option value="4">4 أشخاص</option>'+
+        '<option value="5">5+ أشخاص</option>'+
+      '</select>'+
+    '</div>'+
+    '<div class="form-group">'+
+      '<label class="form-label">ملاحظات للمالك</label>'+
+      '<textarea class="form-field" id="book-notes" rows="2" placeholder="أي طلبات خاصة..."></textarea>'+
+    '</div>'+
+    '<div id="price-summary" style="display:none;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:14px;padding:14px;margin-bottom:14px">'+
+      '<div style="display:flex;justify-content:space-between;margin-bottom:8px">'+
+        '<span style="color:var(--smoke);font-size:13px">عدد الليالي</span>'+
+        '<span id="nights-count" style="font-weight:700">--</span>'+
+      '</div>'+
+      '<div style="display:flex;justify-content:space-between;margin-bottom:8px">'+
+        '<span style="color:var(--smoke);font-size:13px">إجمالي الإيجار</span>'+
+        '<span id="total-price" style="font-weight:700">--</span>'+
+      '</div>'+
+      '<div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:10px;margin-top:4px">'+
+        '<span style="color:var(--smoke);font-size:13px">العربون المطلوب (25%)</span>'+
+        '<span id="deposit-price" style="font-weight:900;color:var(--gold)">--</span>'+
+      '</div>'+
+      '<p style="color:var(--smoke);font-size:11px;margin-top:10px;line-height:1.6">⚠️ لن يُطلب منك الدفع الآن — العربون يُدفع فقط بعد موافقة المالك خلال 24 ساعة.</p>'+
+    '</div>'+
+    '<button class="btn-primary" id="confirm-booking-btn" disabled onclick="confirmBooking(\''+p.id+'\',\''+V.clean(p.name)+'\',\''+V.clean(p.phone||'')+'\','+p.price+')">إرسال طلب الحجز</button>'+
+    '<button class="btn-secondary" onclick="closeModal(\'booking-modal\')">إلغاء</button>';
+
+  var today = new Date().toISOString().split('T')[0];
+  setTimeout(function(){
+    var ci=document.getElementById('book-checkin');
+    var co=document.getElementById('book-checkout');
+    if(ci) ci.min=today;
+    if(co) co.min=today;
+  },100);
+
+  openModal('booking-modal');
+}
+
+function calcTotal(propId, pricePerNight) {
+  var ci=document.getElementById('book-checkin');
+  var co=document.getElementById('book-checkout');
+  var summary=document.getElementById('price-summary');
+  var btn=document.getElementById('confirm-booking-btn');
+  if(!ci||!co||!ci.value||!co.value) return;
+
+  var d1=new Date(ci.value), d2=new Date(co.value);
+  var nights=Math.round((d2-d1)/(1000*60*60*24));
+  if(nights<=0) { if(summary)summary.style.display='none'; if(btn)btn.disabled=true; return; }
+
+  var total=nights*pricePerNight;
+  var deposit=Math.ceil(total*0.25);
+
+  var nc=document.getElementById('nights-count');
+  var tp=document.getElementById('total-price');
+  var dp=document.getElementById('deposit-price');
+  if(nc) nc.textContent=nights+' ليلة';
+  if(tp) tp.textContent=total+' د.ل';
+  if(dp) dp.textContent=deposit+' د.ل';
+  if(summary) summary.style.display='block';
+  if(btn) btn.disabled=false;
+}
+
+function confirmBooking(propId, propName, ownerPhone, pricePerNight) {
+  var ci=document.getElementById('book-checkin');
+  var co=document.getElementById('book-checkout');
+  var guests=document.getElementById('book-guests');
+  var notes=document.getElementById('book-notes');
+  if(!ci||!co||!ci.value||!co.value) return;
+
+  var d1=new Date(ci.value), d2=new Date(co.value);
+  var nights=Math.round((d2-d1)/(1000*60*60*24));
+  if(nights<=0) return;
+
+  var total=nights*pricePerNight;
+  var deposit=Math.ceil(total*0.25);
+
+  var booking={
+    propertyId: propId,
+    propertyName: propName,
+    userId: currentUser.id,
+    userName: currentUser.name,
+    userPhone: currentUser.phone,
+    checkIn: ci.value,
+    checkOut: co.value,
+    nights: nights,
+    guests: guests?guests.value:'1',
+    notes: notes?notes.value:'',
+    totalPrice: total,
+    deposit: deposit,
+    pricePerNight: pricePerNight,
+    status: 'pending',
+    timestamp: Date.now()
+  };
+
+  if(db){
+    db.ref('bookings').push().set(booking).then(function(){
+      closeModal('booking-modal');
+      showBookingConfirm(booking, ownerPhone);
+    });
+  } else {
+    closeModal('booking-modal');
+    showBookingConfirm(booking, ownerPhone);
+  }
+}
+
+function showBookingConfirm(booking, ownerPhone) {
+  var modal=document.getElementById('confirm-modal');
+  var content=document.getElementById('confirm-content');
+  if(!content) return;
+  content.innerHTML=
+    '<div class="modal-handle"></div>'+
+    '<div style="text-align:center;padding:16px 0">'+
+      '<div style="font-size:56px;margin-bottom:12px">📨</div>'+
+      '<h3 style="font-size:18px;font-weight:900;margin-bottom:8px">تم إرسال طلب الحجز!</h3>'+
+      '<p style="color:var(--smoke);font-size:13px;line-height:1.8;margin-bottom:20px">'+
+        'سيراجع المالك طلبك ويرد خلال 24 ساعة.<br/>'+
+        'عند الموافقة ستُطلب منك دفع العربون.<br/>'+
+        '<strong style="color:var(--gold)">العربون: '+booking.deposit+' د.ل</strong>'+
+      '</p>'+
+      '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:16px;text-align:right">'+
+        '<div style="display:flex;justify-content:space-between;margin-bottom:8px">'+
+          '<span style="color:var(--smoke);font-size:12px">تاريخ الوصول</span>'+
+          '<span style="font-weight:700">'+booking.checkIn+'</span>'+
+        '</div>'+
+        '<div style="display:flex;justify-content:space-between;margin-bottom:8px">'+
+          '<span style="color:var(--smoke);font-size:12px">تاريخ المغادرة</span>'+
+          '<span style="font-weight:700">'+booking.checkOut+'</span>'+
+        '</div>'+
+        '<div style="display:flex;justify-content:space-between">'+
+          '<span style="color:var(--smoke);font-size:12px">الإجمالي</span>'+
+          '<span style="font-weight:900;color:var(--gold)">'+booking.totalPrice+' د.ل</span>'+
+        '</div>'+
+      '</div>'+
+      (ownerPhone && ownerPhone!=='—'?
+        '<a href="https://wa.me/218'+ownerPhone.replace(/^0/,'')+
+          '?text='+encodeURIComponent('مرحباً، أرسلت طلب حجز لعقار '+booking.propertyName+' من '+booking.checkIn+' إلى '+booking.checkOut)+
+          '" style="display:block;background:rgba(37,211,102,0.15);border:1px solid rgba(37,211,102,0.3);'+
+          'border-radius:12px;padding:14px;color:#25D366;text-decoration:none;font-weight:700;font-size:14px;margin-bottom:10px">'+
+          '💬 تواصل مع المالك عبر واتساب</a>':'')+''+
+      '<button class="btn-secondary" onclick="closeModal(\'confirm-modal\');navTo(\'profile\')">عرض حجوزاتي</button>'+
+    '</div>';
+  openModal('confirm-modal');
+}
+
+function contactOwner(phone) {
+  if(phone && phone !== '—') window.location.href='tel:'+phone;
+  else alert('رقم المالك غير متاح');
+}
+
+// ===== AUTH =====
+function chkLogin() {
+  var n=document.getElementById('login-name').value;
+  var p=document.getElementById('login-phone').value;
+  document.getElementById('login-btn').disabled=!(V.name(n)&&V.phone(p));
+}
+
+function doLogin() {
+  var name=document.getElementById('login-name').value.trim();
+  var phone=document.getElementById('login-phone').value.trim();
+  if(!V.name(name)||!V.phone(phone)) return;
+  currentUser={name:name,phone:phone,id:'user_'+Date.now()};
+  localStorage.setItem('kariaUser',JSON.stringify(currentUser));
+  if(db) db.ref('users/'+currentUser.id).set({name:name,phone:phone,timestamp:Date.now()});
+  closeModal('login-modal');
+  renderProfile();
+}
+
+function doLogout() {
+  currentUser=null;
+  localStorage.removeItem('kariaUser');
+  renderProfile();
+}
+
+function renderProfile() {
+  var ne=document.getElementById('profile-name');
+  var pe=document.getElementById('profile-phone');
+  var lb=document.getElementById('profile-login-btn');
+  var ac=document.getElementById('profile-actions');
+  var bk=document.getElementById('profile-bookings');
+  if(currentUser){
+    if(ne) ne.textContent=V.clean(currentUser.name);
+    if(pe) pe.textContent=currentUser.phone;
+    if(lb) lb.style.display='none';
+    if(ac) ac.style.display='block';
+    if(bk) bk.style.display='block';
+    loadUserBookings();
+  } else {
+    if(ne) ne.textContent='مرحباً بك';
+    if(pe) pe.textContent='سجّل دخولك للمتابعة';
+    if(lb) lb.style.display='block';
+    if(ac) ac.style.display='none';
+    if(bk) bk.style.display='none';
+  }
+}
+
+// ===== ADD PROPERTY =====
+function submitProperty() {
+  var name =document.getElementById('prop-name').value.trim();
+  var type =document.getElementById('prop-type').value;
+  var loc  =document.getElementById('prop-location').value.trim();
+  var price=document.getElementById('prop-price').value;
+  var rooms=document.getElementById('prop-rooms').value;
+  var desc =document.getElementById('prop-desc').value.trim();
+  var phone=document.getElementById('prop-phone').value.trim();
+
+  if(!name||!type||!loc||!price){ alert('يرجى ملء الحقول المطلوبة (*)'); return; }
+  if(phone&&!V.phone(phone)){ alert('رقم الهاتف غير صحيح'); return; }
+
+  var prop={
+    name:name,type:type,location:loc,
+    price:parseInt(price)||0,rooms:parseInt(rooms)||1,
+    desc:desc,phone:phone,
+    owner:currentUser?currentUser.id:'anonymous',
+    status:'pending',timestamp:Date.now()
+  };
+
+  if(db){
+    db.ref('properties').push().set(prop).then(function(){
+      closeModal('list-modal');
+      alert('✅ تم إرسال العقار للمراجعة — سيظهر خلال 24 ساعة');
+      document.getElementById('prop-name').value='';
+      document.getElementById('prop-type').value='';
+      document.getElementById('prop-location').value='';
+      document.getElementById('prop-price').value='';
+      document.getElementById('prop-rooms').value='';
+      document.getElementById('prop-desc').value='';
+      document.getElementById('prop-phone').value='';
+    });
+  } else {
+    closeModal('list-modal');
+    alert('✅ تم استلام طلبك');
+  }
+}
+
+// ===== OWNER PANEL =====
+function openOwnerPanel() {
+  if(!currentUser){ openModal('login-modal'); return; }
+  openModal('owner-modal');
+  loadOwnerBookings();
+}
+
+function loadOwnerBookings() {
+  var list = document.getElementById('owner-bookings-list');
+  if(!list) return;
+  if(!db){ list.innerHTML='<div style="text-align:center;padding:30px;color:var(--smoke)">لا توجد حجوزات</div>'; return; }
+
+  db.ref('bookings').orderByChild('timestamp').limitToLast(20).on('value', function(snap) {
+    var bookings = [];
+    snap.forEach(function(b){ bookings.unshift(Object.assign({id:b.key},b.val())); });
+
+    // فلتر حجوزات عقارات هذا المالك فقط
+    var myProps = allProps.filter(function(p){ return p.owner===currentUser.id; }).map(function(p){ return p.id; });
+    var myBookings = myProps.length ? bookings.filter(function(b){ return myProps.indexOf(b.propertyId)>-1; }) : bookings;
+
+    if(!myBookings.length){
+      list.innerHTML='<div style="text-align:center;padding:30px;color:var(--smoke)"><div style="font-size:40px;margin-bottom:10px">📭</div><p>لا توجد حجوزات بعد</p></div>';
+      return;
+    }
+
+    var STATUS_COLORS = { pending:'#D4A017', approved:'#27AE60', paid:'#0ABFBC', confirmed:'#276EF1', cancelled:'#E05263', rejected:'#E05263' };
+    var STATUS_LABELS = { pending:'بانتظار الموافقة', approved:'تمت الموافقة', paid:'تم دفع العربون', confirmed:'مؤكد', cancelled:'ملغي', rejected:'مرفوض' };
+
+    list.innerHTML = myBookings.map(function(b){
+      var sc = STATUS_COLORS[b.status]||'#8892A4';
+      var sl = STATUS_LABELS[b.status]||b.status;
+      var isPending = b.status==='pending';
+      return '<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px">'+
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">'+
+          '<div>'+
+            '<div style="font-weight:700;font-size:14px;margin-bottom:3px">'+V.clean(b.propertyName||'—')+'</div>'+
+            '<div style="color:var(--smoke);font-size:12px">'+V.clean(b.userName||'—')+' · '+V.clean(b.userPhone||'—')+'</div>'+
+          '</div>'+
+          '<span style="background:'+sc+'22;color:'+sc+';border:1px solid '+sc+'44;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700">'+sl+'</span>'+
+        '</div>'+
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'+
+          '<div style="background:var(--surface);border-radius:10px;padding:10px;text-align:center">'+
+            '<div style="color:var(--smoke);font-size:10px;margin-bottom:2px">الوصول</div>'+
+            '<div style="font-weight:700;font-size:13px">'+( b.checkIn||'—')+'</div>'+
+          '</div>'+
+          '<div style="background:var(--surface);border-radius:10px;padding:10px;text-align:center">'+
+            '<div style="color:var(--smoke);font-size:10px;margin-bottom:2px">المغادرة</div>'+
+            '<div style="font-weight:700;font-size:13px">'+(b.checkOut||'—')+'</div>'+
+          '</div>'+
+        '</div>'+
+        '<div style="display:flex;justify-content:space-between;margin-bottom:12px">'+
+          '<span style="color:var(--smoke);font-size:12px">'+( b.nights||'--')+' ليلة · '+(b.guests||'1')+' أشخاص</span>'+
+          '<span style="color:var(--gold);font-weight:900;font-size:14px">'+(b.totalPrice||'--')+' د.ل</span>'+
+        '</div>'+
+        (b.notes?'<div style="color:var(--smoke);font-size:12px;margin-bottom:12px;padding:10px;background:var(--surface);border-radius:10px">💬 '+V.clean(b.notes)+'</div>':'')+
+        (isPending?
+          '<div style="display:flex;gap:8px">'+
+            '<button onclick="respondBooking(\''+b.id+'\',\'rejected\')" style="flex:1;background:rgba(224,82,99,0.1);border:1px solid rgba(224,82,99,0.3);border-radius:12px;padding:12px;color:var(--red);font-family:Cairo,sans-serif;font-weight:700;font-size:13px;cursor:pointer">✗ رفض</button>'+
+            '<button onclick="respondBooking(\''+b.id+'\',\'approved\')" style="flex:2;background:linear-gradient(135deg,var(--gold),var(--gold-light));border:none;border-radius:12px;padding:12px;color:#000;font-family:Cairo,sans-serif;font-weight:700;font-size:13px;cursor:pointer">✓ قبول الحجز</button>'+
+          '</div>':
+          (b.status==='approved'?
+            '<div style="background:rgba(39,174,96,0.1);border:1px solid rgba(39,174,96,0.2);border-radius:12px;padding:12px;text-align:center">'+
+              '<div style="color:var(--green);font-weight:700;font-size:13px;margin-bottom:4px">✅ تمت الموافقة</div>'+
+              '<div style="color:var(--smoke);font-size:12px">بانتظار دفع العربون من الزبون: <strong style="color:var(--gold)">'+(b.deposit||'--')+' د.ل</strong></div>'+
+            '</div>':
+            '<div style="text-align:center;color:var(--smoke);font-size:12px;padding:8px">'+sl+'</div>'
+          )
+        )+
+      '</div>';
+    }).join('');
+  });
+}
+
+function respondBooking(bookingId, response) {
+  if(!db) return;
+  var updates = { status: response };
+  if(response==='approved') updates.approvedAt = Date.now();
+  if(response==='rejected') updates.rejectedAt = Date.now();
+
+  db.ref('bookings/'+bookingId).update(updates).then(function(){
+    if(response==='approved'){
+      // إشعار الزبون بالقبول
+      db.ref('bookings/'+bookingId).once('value',function(snap){
+        var b=snap.val();
+        if(b){
+          // يمكن إضافة إشعار واتساب هنا
+          alert('✅ تمت الموافقة على الحجز — سيُطلب من الزبون دفع العربون: '+(b.deposit||'--')+' د.ل');
+        }
+      });
+    } else {
+      alert('تم رفض الحجز');
+    }
+    loadOwnerBookings();
+  });
+}
+
+// عرض حجوزات الزبون في صفحة الحساب
+function loadUserBookings() {
+  if(!currentUser||!db) return;
+  var list=document.getElementById('bookings-list');
+  if(!list) return;
+
+  var STATUS_LABELS={pending:'⏳ بانتظار الموافقة',approved:'✅ تمت الموافقة — ادفع العربون',paid:'💰 تم الدفع',confirmed:'🎉 مؤكد',cancelled:'❌ ملغي',rejected:'❌ مرفوض'};
+  var STATUS_COLORS={pending:'#D4A017',approved:'#27AE60',paid:'#0ABFBC',confirmed:'#276EF1',cancelled:'#E05263',rejected:'#E05263'};
+
+  db.ref('bookings').orderByChild('userId').equalTo(currentUser.id).limitToLast(10).on('value',function(snap){
+    var bookings=[];
+    snap.forEach(function(b){ bookings.unshift(Object.assign({id:b.key},b.val())); });
+    if(!bookings.length){
+      list.innerHTML='<div style="text-align:center;padding:20px;color:var(--smoke);font-size:13px">لا توجد حجوزات بعد</div>';
+      return;
+    }
+    list.innerHTML=bookings.map(function(b){
+      var sc=STATUS_COLORS[b.status]||'#8892A4';
+      var sl=STATUS_LABELS[b.status]||b.status;
+      return '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px">'+
+        '<div style="display:flex;justify-content:space-between;margin-bottom:8px">'+
+          '<div style="font-weight:700;font-size:13px">'+V.clean(b.propertyName||'—')+'</div>'+
+          '<span style="color:'+sc+';font-size:11px;font-weight:700">'+sl+'</span>'+
+        '</div>'+
+        '<div style="color:var(--smoke);font-size:12px;margin-bottom:8px">'+
+          (b.checkIn||'—')+' ← '+(b.checkOut||'—')+' · '+(b.nights||'--')+' ليلة'+
+        '</div>'+
+        '<div style="display:flex;justify-content:space-between">'+
+          '<span style="color:var(--smoke);font-size:12px">الإجمالي</span>'+
+          '<span style="color:var(--gold);font-weight:900">'+(b.totalPrice||'--')+' د.ل</span>'+
+        '</div>'+
+        (b.status==='approved'?
+          '<div style="margin-top:10px;background:rgba(39,174,96,0.1);border:1px solid rgba(39,174,96,0.2);border-radius:10px;padding:10px;text-align:center">'+
+            '<div style="color:var(--smoke);font-size:12px;margin-bottom:6px">ادفع العربون لتأكيد الحجز</div>'+
+            '<div style="color:var(--gold);font-weight:900;font-size:18px;margin-bottom:8px">'+(b.deposit||'--')+' د.ل</div>'+
+            '<button onclick="payDeposit(\''+b.id+'\')" style="background:linear-gradient(135deg,var(--gold),var(--gold-light));border:none;border-radius:10px;padding:10px 20px;color:#000;font-family:Cairo,sans-serif;font-weight:700;cursor:pointer">دفع العربون الآن</button>'+
+          '</div>':'')+
+      '</div>';
+    }).join('');
+  });
+}
+
+function payDeposit(bookingId) {
+  // مرحلة أولى — محاكاة الدفع
+  // سيتم ربطه بـ ماسترباي.ly لاحقاً
+  if(confirm('هل تريد دفع العربون الآن؟\nسيتم تحويلك لبوابة الدفع.')){
+    if(db){
+      db.ref('bookings/'+bookingId).update({status:'paid',paidAt:Date.now()}).then(function(){
+        alert('✅ تم تسجيل طلب الدفع — سيتم التأكيد قريباً\n(سيتم ربط بوابة الدفع الإلكتروني قريباً)');
+        loadUserBookings();
+      });
+    }
+  }
+}
+
+// ===== INIT =====
+(function(){
+  var today=new Date().toISOString().split('T')[0];
+  var ci=document.getElementById('search-checkin');
+  var co=document.getElementById('search-checkout');
+  if(ci) ci.min=today;
+  if(co) co.min=today;
+  if(currentUser) renderProfile();
+  loadProps();
+})();
+</script>
+</body>
+</html>
