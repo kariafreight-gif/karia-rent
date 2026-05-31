@@ -160,6 +160,9 @@ html,body{min-height:100vh;background:var(--bg);color:var(--white);
   font-family:'Cairo',sans-serif;direction:rtl;outline:none;appearance:none}
 .form-field:focus{border-color:var(--gold)}
 .form-field::placeholder{color:var(--smoke)}
+.booking-date-grid{display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:8px}
+.date-part{text-align:center;direction:ltr}
+.date-part.invalid{border-color:var(--red)}
 .btn-primary{width:100%;background:linear-gradient(135deg,var(--gold),var(--gold-light));
   border:none;border-radius:14px;padding:15px;font-size:16px;font-weight:700;
   font-family:'Cairo',sans-serif;color:#000;cursor:pointer;margin-top:4px}
@@ -751,11 +754,21 @@ function openBookingModal(p) {
     '</div>'+
     '<div class="form-group">'+
       '<label class="form-label">تاريخ الوصول *</label>'+
-      '<input type="date" class="form-field" id="book-checkin" oninput="calcTotal(\''+p.id+'\','+p.price+')"/>'+
+      '<input type="hidden" id="book-checkin"/>'+
+      '<div class="booking-date-grid">'+
+        '<input type="text" class="form-field date-part" id="book-checkin-day" inputmode="numeric" maxlength="2" placeholder="اليوم" oninput="syncBookingDate(\'checkin\','+p.price+')"/>'+
+        '<input type="text" class="form-field date-part" id="book-checkin-month" inputmode="numeric" maxlength="2" placeholder="الشهر" oninput="syncBookingDate(\'checkin\','+p.price+')"/>'+
+        '<input type="text" class="form-field date-part" id="book-checkin-year" inputmode="numeric" maxlength="4" placeholder="السنة" oninput="syncBookingDate(\'checkin\','+p.price+')"/>'+
+      '</div>'+
     '</div>'+
     '<div class="form-group">'+
       '<label class="form-label">تاريخ المغادرة *</label>'+
-      '<input type="date" class="form-field" id="book-checkout" oninput="calcTotal(\''+p.id+'\','+p.price+')"/>'+
+      '<input type="hidden" id="book-checkout"/>'+
+      '<div class="booking-date-grid">'+
+        '<input type="text" class="form-field date-part" id="book-checkout-day" inputmode="numeric" maxlength="2" placeholder="اليوم" oninput="syncBookingDate(\'checkout\','+p.price+')"/>'+
+        '<input type="text" class="form-field date-part" id="book-checkout-month" inputmode="numeric" maxlength="2" placeholder="الشهر" oninput="syncBookingDate(\'checkout\','+p.price+')"/>'+
+        '<input type="text" class="form-field date-part" id="book-checkout-year" inputmode="numeric" maxlength="4" placeholder="السنة" oninput="syncBookingDate(\'checkout\','+p.price+')"/>'+
+      '</div>'+
     '</div>'+
     '<div class="form-group">'+
       '<label class="form-label">عدد الأشخاص</label>'+
@@ -800,12 +813,43 @@ function openBookingModal(p) {
   openModal('booking-modal');
 }
 
+function daysInMonth(year, month) {
+  return new Date(year, month, 0).getDate();
+}
+
+function syncBookingDate(kind, pricePerNight) {
+  var day = document.getElementById('book-'+kind+'-day');
+  var month = document.getElementById('book-'+kind+'-month');
+  var year = document.getElementById('book-'+kind+'-year');
+  var hidden = document.getElementById('book-'+kind);
+  if(!day||!month||!year||!hidden) return;
+
+  [day,month,year].forEach(function(input){
+    input.value = input.value.replace(/\D/g,'');
+  });
+
+  var d = parseInt(day.value,10);
+  var m = parseInt(month.value,10);
+  var y = parseInt(year.value,10);
+  var complete = day.value.length > 0 && month.value.length > 0 && year.value.length === 4;
+  var valid = complete && m >= 1 && m <= 12 && d >= 1 && d <= daysInMonth(y,m);
+
+  day.classList.toggle('invalid', complete && !(d >= 1 && m >= 1 && m <= 12 && d <= daysInMonth(y,m)));
+  month.classList.toggle('invalid', complete && !(m >= 1 && m <= 12));
+  year.classList.toggle('invalid', year.value.length > 0 && year.value.length < 4);
+
+  hidden.value = valid
+    ? String(y).padStart(4,'0')+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0')
+    : '';
+  calcTotal('', pricePerNight);
+}
+
 function calcTotal(propId, pricePerNight) {
   var ci=document.getElementById('book-checkin');
   var co=document.getElementById('book-checkout');
   var summary=document.getElementById('price-summary');
   var btn=document.getElementById('confirm-booking-btn');
-  if(!ci||!co||!ci.value||!co.value) return;
+  if(!ci||!co||!ci.value||!co.value) { if(summary)summary.style.display='none'; if(btn)btn.disabled=true; return; }
 
   var d1=new Date(ci.value), d2=new Date(co.value);
   var nights=Math.round((d2-d1)/(1000*60*60*24));
