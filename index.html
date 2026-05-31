@@ -9,6 +9,7 @@
 <title>كرية — إيجار العقارات في ليبيا</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet"/>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -159,6 +160,9 @@ html,body{min-height:100vh;background:var(--bg);color:var(--white);
   font-family:'Cairo',sans-serif;direction:rtl;outline:none;appearance:none}
 .form-field:focus{border-color:var(--gold)}
 .form-field::placeholder{color:var(--smoke)}
+.booking-date-grid{display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:8px}
+.date-part{text-align:center;direction:ltr}
+.date-part.invalid{border-color:var(--red)}
 .btn-primary{width:100%;background:linear-gradient(135deg,var(--gold),var(--gold-light));
   border:none;border-radius:14px;padding:15px;font-size:16px;font-weight:700;
   font-family:'Cairo',sans-serif;color:#000;cursor:pointer;margin-top:4px}
@@ -191,8 +195,9 @@ html,body{min-height:100vh;background:var(--bg);color:var(--white);
     <span class="logo-sub">إيجار العقارات في ليبيا</span>
   </div>
   <div class="header-btns">
-    <button class="btn-login" onclick="openModal('login-modal')">دخول</button>
-    <button class="btn-list" onclick="currentUser?openOwnerPanel():openModal('list-modal')">+ أضف عقارك</button>
+    <button class="btn-login" id="header-login-btn" onclick="openAuthModal('login')">دخول</button>
+    <button class="btn-login" onclick="openAuthModal('signup')">إنشاء حساب</button>
+    <button class="btn-list" onclick="currentUser?openOwnerPanel():requireLogin('list')">+ أضف عقارك</button>
   </div>
 </header>
 
@@ -201,7 +206,7 @@ html,body{min-height:100vh;background:var(--bg);color:var(--white);
   <div class="hero">
     <div class="hero-tag">🏠 عقارات للإيجار في ليبيا</div>
     <h1 class="hero-title">ابحث عن<br/><span>مكانك المثالي</span></h1>
-    <p class="hero-sub">شقق، استراحات، وغرف للإيجار اليومي والشهري<br/>بأسعار شفافة وحجز مباشر</p>
+    <p class="hero-sub">شقق، استراحات، وفنادق للإيجار اليومي والشهري<br/>بأسعار شفافة وحجز مباشر</p>
   </div>
 
   <div style="padding:0 20px;margin-bottom:20px">
@@ -215,7 +220,7 @@ html,body{min-height:100vh;background:var(--bg);color:var(--white);
         <select class="search-field" id="search-type">
           <option value="">🏠 النوع</option>
           <option value="apartment">شقة</option><option value="rest">استراحة</option>
-          <option value="room">غرفة</option><option value="villa">فيلا</option>
+          <option value="room">فندق</option><option value="villa">فيلا</option>
           <option value="chalet">شاليه</option>
         </select>
       </div>
@@ -232,7 +237,7 @@ html,body{min-height:100vh;background:var(--bg);color:var(--white);
       <div class="filter-chip active" onclick="filterBy('all',this)">الكل</div>
       <div class="filter-chip" onclick="filterBy('apartment',this)">🏢 شقق</div>
       <div class="filter-chip" onclick="filterBy('rest',this)">🌴 استراحات</div>
-      <div class="filter-chip" onclick="filterBy('room',this)">🛏 غرف</div>
+      <div class="filter-chip" onclick="filterBy('room',this)">🏨 فنادق</div>
       <div class="filter-chip" onclick="filterBy('villa',this)">🏡 فيلات</div>
       <div class="filter-chip" onclick="filterBy('chalet',this)">⛺ شاليهات</div>
     </div>
@@ -264,7 +269,7 @@ html,body{min-height:100vh;background:var(--bg);color:var(--white);
     <div class="cat-grid">
       <div class="cat-card" onclick="filterBy('apartment',null)"><div class="cat-icon">🏢</div><div class="cat-name">شقق</div></div>
       <div class="cat-card" onclick="filterBy('rest',null)"><div class="cat-icon">🌴</div><div class="cat-name">استراحات</div></div>
-      <div class="cat-card" onclick="filterBy('room',null)"><div class="cat-icon">🛏</div><div class="cat-name">غرف</div></div>
+      <div class="cat-card" onclick="filterBy('room',null)"><div class="cat-icon">🏨</div><div class="cat-name">فنادق</div></div>
       <div class="cat-card" onclick="filterBy('villa',null)"><div class="cat-icon">🏡</div><div class="cat-name">فيلات</div></div>
     </div>
   </div>
@@ -282,7 +287,7 @@ html,body{min-height:100vh;background:var(--bg);color:var(--white);
     <div style="font-size:40px;margin-bottom:10px">🏠</div>
     <div style="font-size:17px;font-weight:700;margin-bottom:8px">لديك عقار؟ أضفه الآن</div>
     <div style="color:var(--smoke);font-size:13px;margin-bottom:14px;line-height:1.7">سجّل عقارك مجاناً وابدأ في استقبال الحجوزات</div>
-    <button class="btn-primary" style="max-width:200px;margin:0 auto;display:block" onclick="openModal('list-modal')">أضف عقارك مجاناً</button>
+    <button class="btn-primary" style="max-width:200px;margin:0 auto;display:block" onclick="currentUser?openModal('list-modal'):requireLogin('list')">أضف عقارك مجاناً</button>
   </div>
 </div>
 
@@ -294,7 +299,7 @@ html,body{min-height:100vh;background:var(--bg);color:var(--white);
       <div class="filter-chip active" onclick="searchFilter('all',this)">الكل</div>
       <div class="filter-chip" onclick="searchFilter('apartment',this)">🏢 شقق</div>
       <div class="filter-chip" onclick="searchFilter('rest',this)">🌴 استراحات</div>
-      <div class="filter-chip" onclick="searchFilter('room',this)">🛏 غرف</div>
+      <div class="filter-chip" onclick="searchFilter('room',this)">🏨 فنادق</div>
       <div class="filter-chip" onclick="searchFilter('villa',this)">🏡 فيلات</div>
     </div>
   </div>
@@ -327,10 +332,11 @@ html,body{min-height:100vh;background:var(--bg);color:var(--white);
       <div style="font-size:18px;font-weight:700;margin-bottom:4px" id="profile-name">مرحباً بك</div>
       <div style="color:var(--smoke);font-size:13px" id="profile-phone">سجّل دخولك للمتابعة</div>
     </div>
-    <button class="btn-primary" onclick="openModal('login-modal')" id="profile-login-btn">تسجيل الدخول</button>
+    <button class="btn-primary" onclick="openAuthModal('login')" id="profile-login-btn">تسجيل الدخول</button>
     <div id="profile-actions" style="display:none;margin-top:16px">
       <button class="btn-primary" onclick="openOwnerPanel()" style="margin-bottom:8px">🏠 لوحة المالك — حجوزاتي</button>
-      <button class="btn-secondary" onclick="openModal('list-modal')">+ أضف عقاراً جديداً</button>
+      <button class="btn-secondary" onclick="currentUser?openModal('list-modal'):requireLogin('list')">+ أضف عقاراً جديداً</button>
+      <button class="btn-secondary" id="admin-panel-btn" onclick="openAdminPanel()" style="display:none;margin-top:8px">إدارة العقارات المعلقة</button>
       <button class="btn-secondary" style="margin-top:8px;color:var(--red);border-color:rgba(224,82,99,0.3)" onclick="doLogout()">تسجيل الخروج</button>
     </div>
     <div id="profile-bookings" style="display:none;margin-top:20px">
@@ -361,16 +367,25 @@ html,body{min-height:100vh;background:var(--bg);color:var(--white);
   <div class="modal-backdrop" onclick="closeModal('login-modal')"></div>
   <div class="modal-sheet">
     <div class="modal-handle"></div>
-    <div class="modal-title">تسجيل الدخول</div>
-    <div class="form-group">
+    <div class="modal-title" id="auth-modal-title">تسجيل الدخول</div>
+    <div class="form-group" id="auth-name-group">
       <label class="form-label">الاسم الكامل</label>
       <input type="text" class="form-field" id="login-name" placeholder="مثال: فرج المبروك" oninput="chkLogin()"/>
     </div>
-    <div class="form-group">
+    <div class="form-group" id="auth-phone-group">
       <label class="form-label">رقم الهاتف</label>
       <input type="tel" class="form-field" id="login-phone" placeholder="09xxxxxxxx" oninput="chkLogin()"/>
     </div>
-    <button class="btn-primary" id="login-btn" disabled onclick="doLogin()">دخول ✓</button>
+    <div class="form-group">
+      <label class="form-label">البريد الإلكتروني</label>
+      <input type="email" class="form-field" id="login-email" placeholder="مثال: name@example.com" oninput="chkLogin()" dir="ltr"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">كلمة المرور</label>
+      <input type="password" class="form-field" id="login-password" placeholder="6 أحرف على الأقل" oninput="chkLogin()" dir="ltr"/>
+    </div>
+    <button class="btn-primary" id="login-btn" disabled onclick="submitAuthMode()">تسجيل الدخول</button>
+    <button class="btn-secondary" id="signup-btn" onclick="toggleAuthMode()">ليس لديك حساب؟ إنشاء حساب جديد</button>
     <button class="btn-secondary" onclick="closeModal('login-modal')">إلغاء</button>
   </div>
 </div>
@@ -391,7 +406,7 @@ html,body{min-height:100vh;background:var(--bg);color:var(--white);
         <option value="">اختر النوع</option>
         <option value="apartment">شقة</option>
         <option value="rest">استراحة</option>
-        <option value="room">غرفة</option>
+        <option value="room">فندق</option>
         <option value="villa">فيلا</option>
         <option value="chalet">شاليه</option>
       </select>
@@ -447,6 +462,18 @@ html,body{min-height:100vh;background:var(--bg);color:var(--white);
   </div>
 </div>
 
+<!-- ADMIN MODERATION MODAL -->
+<div class="modal" id="admin-modal">
+  <div class="modal-backdrop" onclick="closeModal('admin-modal')"></div>
+  <div class="modal-sheet" style="max-height:90vh">
+    <div class="modal-handle"></div>
+    <div class="modal-title">إدارة العقارات المعلقة</div>
+    <div id="admin-properties-list">
+      <div style="text-align:center;padding:30px;color:var(--smoke)">جاري التحميل...</div>
+    </div>
+  </div>
+</div>
+
 <!-- PROPERTY DETAIL MODAL -->
 <div class="modal" id="detail-modal">
   <div class="modal-backdrop" onclick="closeModal('detail-modal')"></div>
@@ -461,6 +488,7 @@ window.onerror = function(msg, url, line) {
 
 // ===== FIREBASE =====
 var db;
+var auth;
 try {
   if(!firebase.apps.length) {
     firebase.initializeApp({
@@ -474,6 +502,8 @@ try {
     });
   }
   db = firebase.database();
+  auth = firebase.auth();
+  auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
   db.ref('.info/connected').on('value', function(snap) {
     var bar = document.getElementById('offline-bar');
     if(bar) bar.style.display = snap.val() ? 'none' : 'block';
@@ -492,7 +522,10 @@ var V = {
 };
 
 // ===== STATE =====
-var currentUser = JSON.parse(localStorage.getItem('kariaUser')||'null');
+var currentUser = null;
+var pendingAuthAction = null;
+var isAdmin = false;
+var authMode = 'login';
 var favorites   = JSON.parse(localStorage.getItem('kariaFavs')||'[]');
 var allProps    = [];
 var searchFilter_active = 'all';
@@ -508,9 +541,9 @@ var DEMO = [
 ];
 
 // ===== ICONS =====
-var EMOJIS = {apartment:'🏢',rest:'🌴',room:'🛏',villa:'🏡',chalet:'⛺'};
+var EMOJIS = {apartment:'🏢',rest:'🌴',room:'🏨',villa:'🏡',chalet:'⛺'};
 var COLORS  = ['bg-1','bg-2','bg-3','bg-4','bg-5','bg-6'];
-var LABELS  = {apartment:'شقة',rest:'استراحة',room:'غرفة',villa:'فيلا',chalet:'شاليه'};
+var LABELS  = {apartment:'شقة',rest:'استراحة',room:'فندق',villa:'فيلا',chalet:'شاليه'};
 
 // ===== CARD =====
 function card(p, wide) {
@@ -540,10 +573,16 @@ function card(p, wide) {
 // ===== LOAD =====
 function loadProps() {
   if(!db) { allProps = DEMO; render(); return; }
-  db.ref('properties').on('value', function(snap) {
+  db.ref('properties').orderByChild('status').equalTo('approved').on('value', function(snap) {
     allProps = [];
-    snap.forEach(function(p){ allProps.push(Object.assign({id:p.key},p.val())); });
-    if(!allProps.length) allProps = DEMO;
+    snap.forEach(function(p){
+      var prop = Object.assign({id:p.key},p.val());
+      if(prop.status === 'approved') allProps.push(prop);
+    });
+    render();
+    updateStats();
+  }, function() {
+    allProps = [];
     render();
     updateStats();
   });
@@ -649,6 +688,10 @@ function openProp(id) {
   var em  = EMOJIS[p.type]||'🏠';
   var col = COLORS[Math.abs((p.id||'').charCodeAt(0)||0)%6];
   var fav = favorites.indexOf(id)>-1;
+  var isOwner = currentUser && currentUser.id && (
+    (p.owner && String(currentUser.id) === String(p.owner)) ||
+    (p.ownerId && String(currentUser.id) === String(p.ownerId))
+  );
 
   document.getElementById('detail-content').innerHTML =
     '<div class="modal-handle"></div>'+
@@ -673,7 +716,9 @@ function openProp(id) {
       '</div>'+
     '</div>'+
     (p.desc?'<p style="color:var(--smoke);font-size:13px;line-height:1.8;margin-bottom:16px">'+V.clean(p.desc)+'</p>':'')+
-    '<button class="btn-primary" onclick="bookNow(\''+id+'\')">📅 احجز الآن</button>'+
+    (isOwner?
+      '<button class="btn-secondary" disabled>هذا عقارك</button>':
+      '<button class="btn-primary" onclick="bookNow(\''+id+'\')">📅 احجز الآن</button>')+
     '<button class="btn-secondary" onclick="contactOwner(\''+V.clean(p.phone||'')+'\')">📞 تواصل مع المالك</button>';
 
   openModal('detail-modal');
@@ -682,7 +727,8 @@ function openProp(id) {
 function bookNow(id) {
   if(!currentUser) {
     closeModal('detail-modal');
-    setTimeout(function(){ openModal('login-modal'); }, 300);
+    window.pendingBookingId = id;
+    setTimeout(function(){ requireLogin('booking'); }, 300);
     return;
   }
   var p = allProps.find(function(x){ return x.id===id; });
@@ -708,11 +754,21 @@ function openBookingModal(p) {
     '</div>'+
     '<div class="form-group">'+
       '<label class="form-label">تاريخ الوصول *</label>'+
-      '<input type="date" class="form-field" id="book-checkin" oninput="calcTotal(\''+p.id+'\','+p.price+')"/>'+
+      '<input type="hidden" id="book-checkin"/>'+
+      '<div class="booking-date-grid">'+
+        '<input type="text" class="form-field date-part" id="book-checkin-day" inputmode="numeric" maxlength="2" placeholder="اليوم" oninput="syncBookingDate(\'checkin\','+p.price+')"/>'+
+        '<input type="text" class="form-field date-part" id="book-checkin-month" inputmode="numeric" maxlength="2" placeholder="الشهر" oninput="syncBookingDate(\'checkin\','+p.price+')"/>'+
+        '<input type="text" class="form-field date-part" id="book-checkin-year" inputmode="numeric" maxlength="4" placeholder="السنة" oninput="syncBookingDate(\'checkin\','+p.price+')"/>'+
+      '</div>'+
     '</div>'+
     '<div class="form-group">'+
       '<label class="form-label">تاريخ المغادرة *</label>'+
-      '<input type="date" class="form-field" id="book-checkout" oninput="calcTotal(\''+p.id+'\','+p.price+')"/>'+
+      '<input type="hidden" id="book-checkout"/>'+
+      '<div class="booking-date-grid">'+
+        '<input type="text" class="form-field date-part" id="book-checkout-day" inputmode="numeric" maxlength="2" placeholder="اليوم" oninput="syncBookingDate(\'checkout\','+p.price+')"/>'+
+        '<input type="text" class="form-field date-part" id="book-checkout-month" inputmode="numeric" maxlength="2" placeholder="الشهر" oninput="syncBookingDate(\'checkout\','+p.price+')"/>'+
+        '<input type="text" class="form-field date-part" id="book-checkout-year" inputmode="numeric" maxlength="4" placeholder="السنة" oninput="syncBookingDate(\'checkout\','+p.price+')"/>'+
+      '</div>'+
     '</div>'+
     '<div class="form-group">'+
       '<label class="form-label">عدد الأشخاص</label>'+
@@ -743,7 +799,7 @@ function openBookingModal(p) {
       '</div>'+
       '<p style="color:var(--smoke);font-size:11px;margin-top:10px;line-height:1.6">⚠️ لن يُطلب منك الدفع الآن — العربون يُدفع فقط بعد موافقة المالك خلال 24 ساعة.</p>'+
     '</div>'+
-    '<button class="btn-primary" id="confirm-booking-btn" disabled onclick="confirmBooking(\''+p.id+'\',\''+V.clean(p.name)+'\',\''+V.clean(p.phone||'')+'\','+p.price+')">إرسال طلب الحجز</button>'+
+    '<button class="btn-primary" id="confirm-booking-btn" disabled onclick="confirmBooking(\''+p.id+'\',\''+V.clean(p.name)+'\',\''+V.clean(p.phone||'')+'\',\''+V.clean(p.owner||p.ownerId||'')+'\','+p.price+')">إرسال طلب الحجز</button>'+
     '<button class="btn-secondary" onclick="closeModal(\'booking-modal\')">إلغاء</button>';
 
   var today = new Date().toISOString().split('T')[0];
@@ -757,12 +813,43 @@ function openBookingModal(p) {
   openModal('booking-modal');
 }
 
+function daysInMonth(year, month) {
+  return new Date(year, month, 0).getDate();
+}
+
+function syncBookingDate(kind, pricePerNight) {
+  var day = document.getElementById('book-'+kind+'-day');
+  var month = document.getElementById('book-'+kind+'-month');
+  var year = document.getElementById('book-'+kind+'-year');
+  var hidden = document.getElementById('book-'+kind);
+  if(!day||!month||!year||!hidden) return;
+
+  [day,month,year].forEach(function(input){
+    input.value = input.value.replace(/\D/g,'');
+  });
+
+  var d = parseInt(day.value,10);
+  var m = parseInt(month.value,10);
+  var y = parseInt(year.value,10);
+  var complete = day.value.length > 0 && month.value.length > 0 && year.value.length === 4;
+  var valid = complete && m >= 1 && m <= 12 && d >= 1 && d <= daysInMonth(y,m);
+
+  day.classList.toggle('invalid', complete && !(d >= 1 && m >= 1 && m <= 12 && d <= daysInMonth(y,m)));
+  month.classList.toggle('invalid', complete && !(m >= 1 && m <= 12));
+  year.classList.toggle('invalid', year.value.length > 0 && year.value.length < 4);
+
+  hidden.value = valid
+    ? String(y).padStart(4,'0')+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0')
+    : '';
+  calcTotal('', pricePerNight);
+}
+
 function calcTotal(propId, pricePerNight) {
   var ci=document.getElementById('book-checkin');
   var co=document.getElementById('book-checkout');
   var summary=document.getElementById('price-summary');
   var btn=document.getElementById('confirm-booking-btn');
-  if(!ci||!co||!ci.value||!co.value) return;
+  if(!ci||!co||!ci.value||!co.value) { if(summary)summary.style.display='none'; if(btn)btn.disabled=true; return; }
 
   var d1=new Date(ci.value), d2=new Date(co.value);
   var nights=Math.round((d2-d1)/(1000*60*60*24));
@@ -781,12 +868,32 @@ function calcTotal(propId, pricePerNight) {
   if(btn) btn.disabled=false;
 }
 
-function confirmBooking(propId, propName, ownerPhone, pricePerNight) {
+function datesOverlap(startA, endA, startB, endB) {
+  return new Date(startA) < new Date(endB) && new Date(endA) > new Date(startB);
+}
+
+function checkPropertyAvailability(propId, checkIn, checkOut) {
+  if(!db) return Promise.resolve(true);
+  return db.ref('propertyBookings/'+propId).once('value').then(function(snap){
+    var available = true;
+    snap.forEach(function(child){
+      var b = child.val();
+      if(b && (b.status === 'pending' || b.status === 'approved') && datesOverlap(checkIn, checkOut, b.checkIn, b.checkOut)) {
+        available = false;
+      }
+    });
+    return available;
+  });
+}
+
+function confirmBooking(propId, propName, ownerPhone, ownerId, pricePerNight) {
   var ci=document.getElementById('book-checkin');
   var co=document.getElementById('book-checkout');
   var guests=document.getElementById('book-guests');
   var notes=document.getElementById('book-notes');
+  if(!currentUser) { requireLogin('booking'); return; }
   if(!ci||!co||!ci.value||!co.value) return;
+  if(!ownerId) { alert('لا يمكن إنشاء الحجز: بيانات المالك غير متاحة'); return; }
 
   var d1=new Date(ci.value), d2=new Date(co.value);
   var nights=Math.round((d2-d1)/(1000*60*60*24));
@@ -798,6 +905,7 @@ function confirmBooking(propId, propName, ownerPhone, pricePerNight) {
   var booking={
     propertyId: propId,
     propertyName: propName,
+    ownerId: ownerId,
     userId: currentUser.id,
     userName: currentUser.name,
     userPhone: currentUser.phone,
@@ -814,9 +922,38 @@ function confirmBooking(propId, propName, ownerPhone, pricePerNight) {
   };
 
   if(db){
-    db.ref('bookings').push().set(booking).then(function(){
-      closeModal('booking-modal');
-      showBookingConfirm(booking, ownerPhone);
+    var btn=document.getElementById('confirm-booking-btn');
+    if(btn) btn.disabled = true;
+    checkPropertyAvailability(propId, ci.value, co.value).then(function(available){
+      if(!available) {
+        alert('هذه التواريخ غير متاحة لهذا العقار. يرجى اختيار تواريخ أخرى.');
+        if(btn) btn.disabled = false;
+        return;
+      }
+
+      var bookingRef = db.ref('bookings').push();
+      booking.id = bookingRef.key;
+      var availability = {
+        bookingId: booking.id,
+        propertyId: propId,
+        checkIn: booking.checkIn,
+        checkOut: booking.checkOut,
+        status: booking.status,
+        ownerId: ownerId,
+        timestamp: booking.timestamp
+      };
+      var updates = {};
+      updates['bookings/'+booking.id] = booking;
+      updates['userBookings/'+currentUser.id+'/'+booking.id] = booking;
+      updates['ownerBookings/'+ownerId+'/'+booking.id] = booking;
+      updates['propertyBookings/'+propId+'/'+booking.id] = availability;
+      return db.ref().update(updates).then(function(){
+        closeModal('booking-modal');
+        showBookingConfirm(booking, ownerPhone);
+      });
+    }).catch(function(){
+      alert('تعذر التحقق من توفر هذه التواريخ');
+      if(btn) btn.disabled = false;
     });
   } else {
     closeModal('booking-modal');
@@ -869,53 +1006,212 @@ function contactOwner(phone) {
 }
 
 // ===== AUTH =====
+function setAuthMode(mode) {
+  authMode = mode === 'signup' ? 'signup' : 'login';
+  var isSignup = authMode === 'signup';
+  var title = document.getElementById('auth-modal-title');
+  var nameGroup = document.getElementById('auth-name-group');
+  var phoneGroup = document.getElementById('auth-phone-group');
+  var loginBtn = document.getElementById('login-btn');
+  var signupBtn = document.getElementById('signup-btn');
+  if(title) title.textContent = isSignup ? 'إنشاء حساب جديد' : 'تسجيل الدخول';
+  if(nameGroup) nameGroup.style.display = isSignup ? 'block' : 'none';
+  if(phoneGroup) phoneGroup.style.display = isSignup ? 'block' : 'none';
+  if(loginBtn) loginBtn.textContent = isSignup ? 'إنشاء حساب جديد' : 'تسجيل الدخول';
+  if(signupBtn) signupBtn.textContent = isSignup ? 'لديك حساب؟ تسجيل الدخول' : 'ليس لديك حساب؟ إنشاء حساب جديد';
+  chkLogin();
+}
+
+function openAuthModal(mode) {
+  setAuthMode(mode);
+  openModal('login-modal');
+}
+
+function toggleAuthMode() {
+  setAuthMode(authMode === 'signup' ? 'login' : 'signup');
+}
+
+function submitAuthMode() {
+  if(authMode === 'signup') doSignup();
+  else doLogin();
+}
+
 function chkLogin() {
   var n=document.getElementById('login-name').value;
   var p=document.getElementById('login-phone').value;
-  document.getElementById('login-btn').disabled=!(V.name(n)&&V.phone(p));
+  var e=document.getElementById('login-email').value.trim();
+  var pw=document.getElementById('login-password').value;
+  var hasAuth=/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)&&pw.length>=6;
+  var ready = authMode === 'signup' ? (hasAuth&&V.name(n)&&V.phone(p)) : hasAuth;
+  document.getElementById('login-btn').disabled=!ready;
+}
+
+function getAuthForm() {
+  return {
+    name: document.getElementById('login-name').value.trim(),
+    phone: document.getElementById('login-phone').value.trim(),
+    email: document.getElementById('login-email').value.trim(),
+    password: document.getElementById('login-password').value
+  };
+}
+
+function requireLogin(action) {
+  pendingAuthAction = action || null;
+  openAuthModal('login');
+}
+
+function runPendingAuthAction() {
+  var action = pendingAuthAction;
+  pendingAuthAction = null;
+  if(action==='list') openModal('list-modal');
+  if(action==='booking' && window.pendingBookingId) {
+    var id = window.pendingBookingId;
+    window.pendingBookingId = null;
+    bookNow(id);
+  }
+}
+
+function setLoginBusy(isBusy) {
+  var loginBtn=document.getElementById('login-btn');
+  if(loginBtn) loginBtn.disabled=isBusy;
+}
+
+function setCurrentUserFromAuthUser(user) {
+  if(!user) {
+    currentUser = null;
+    isAdmin = false;
+    renderProfile();
+    return;
+  }
+  var fallback = {
+    id: user.uid,
+    uid: user.uid,
+    name: user.displayName || user.email || 'User',
+    phone: '',
+    email: user.email || ''
+  };
+  if(!db) {
+    currentUser = fallback;
+    isAdmin = false;
+    renderProfile();
+    runPendingAuthAction();
+    return;
+  }
+  db.ref('users/'+user.uid).once('value').then(function(snap){
+    var profile = snap.val() || {};
+    return db.ref('roles/admins/'+user.uid).once('value').then(function(adminSnap){
+      currentUser = {
+        id: user.uid,
+        uid: user.uid,
+        name: profile.name || fallback.name,
+        phone: profile.phone || fallback.phone,
+        email: profile.email || fallback.email
+      };
+      isAdmin = adminSnap.val() === true;
+      renderProfile();
+      runPendingAuthAction();
+    });
+  }).catch(function(){
+    currentUser = fallback;
+    isAdmin = false;
+    renderProfile();
+    runPendingAuthAction();
+  });
+}
+
+function getAuthErrorMessage(err) {
+  var messages = {
+    'auth/invalid-credential': 'البريد الإلكتروني أو كلمة المرور غير صحيحة. إذا لم يكن لديك حساب، اضغط إنشاء حساب جديد.',
+    'auth/email-already-in-use': 'هذا البريد الإلكتروني مستخدم بالفعل. جرّب تسجيل الدخول.',
+    'auth/weak-password': 'كلمة المرور ضعيفة. يجب أن تكون 6 أحرف على الأقل.',
+    'auth/invalid-email': 'يرجى إدخال بريد إلكتروني صحيح.',
+    'auth/network-request-failed': 'تعذر الاتصال بالإنترنت. تحقق من الشبكة وحاول مرة أخرى.'
+  };
+  return messages[err && err.code] || 'حدث خطأ غير متوقع. حاول مرة أخرى.';
 }
 
 function doLogin() {
-  var name=document.getElementById('login-name').value.trim();
-  var phone=document.getElementById('login-phone').value.trim();
-  if(!V.name(name)||!V.phone(phone)) return;
-  currentUser={name:name,phone:phone,id:'user_'+Date.now()};
-  localStorage.setItem('kariaUser',JSON.stringify(currentUser));
-  if(db) db.ref('users/'+currentUser.id).set({name:name,phone:phone,timestamp:Date.now()});
-  closeModal('login-modal');
-  renderProfile();
+  if(!auth) { alert(getAuthErrorMessage()); return; }
+  var f=getAuthForm();
+  setLoginBusy(true);
+  auth.signInWithEmailAndPassword(f.email,f.password).then(function(cred){
+    if(db&&V.name(f.name)&&V.phone(f.phone)){
+      return db.ref('users/'+cred.user.uid).update({
+        name:f.name,phone:f.phone,email:f.email,updatedAt:Date.now()
+      });
+    }
+  }).then(function(){
+    if(auth.currentUser) setCurrentUserFromAuthUser(auth.currentUser);
+    closeModal('login-modal');
+  }).catch(function(err){
+    alert(getAuthErrorMessage(err));
+  }).finally(function(){
+    setLoginBusy(false);
+    chkLogin();
+  });
+}
+
+function doSignup() {
+  if(!auth) { alert(getAuthErrorMessage()); return; }
+  var f=getAuthForm();
+  if(!V.name(f.name)||!V.phone(f.phone)) return;
+  setLoginBusy(true);
+  auth.createUserWithEmailAndPassword(f.email,f.password).then(function(cred){
+    var user=cred.user;
+    var profile={name:f.name,phone:f.phone,email:f.email,createdAt:Date.now(),updatedAt:Date.now()};
+    var profileWrite = db ? db.ref('users/'+user.uid).set(profile) : Promise.resolve();
+    var displayWrite = user.updateProfile ? user.updateProfile({displayName:f.name}) : Promise.resolve();
+    return Promise.all([profileWrite,displayWrite]);
+  }).then(function(){
+    if(auth.currentUser) setCurrentUserFromAuthUser(auth.currentUser);
+    closeModal('login-modal');
+  }).catch(function(err){
+    alert(getAuthErrorMessage(err));
+  }).finally(function(){
+    setLoginBusy(false);
+    chkLogin();
+  });
 }
 
 function doLogout() {
-  currentUser=null;
-  localStorage.removeItem('kariaUser');
-  renderProfile();
+  if(auth) auth.signOut();
+  else {
+    currentUser=null;
+    renderProfile();
+  }
 }
 
 function renderProfile() {
   var ne=document.getElementById('profile-name');
   var pe=document.getElementById('profile-phone');
   var lb=document.getElementById('profile-login-btn');
+  var hb=document.getElementById('header-login-btn');
   var ac=document.getElementById('profile-actions');
+  var ab=document.getElementById('admin-panel-btn');
   var bk=document.getElementById('profile-bookings');
   if(currentUser){
     if(ne) ne.textContent=V.clean(currentUser.name);
-    if(pe) pe.textContent=currentUser.phone;
+    if(pe) pe.textContent=currentUser.phone || currentUser.email || '';
     if(lb) lb.style.display='none';
+    if(hb) hb.textContent=V.clean(currentUser.name);
     if(ac) ac.style.display='block';
+    if(ab) ab.style.display=isAdmin?'block':'none';
     if(bk) bk.style.display='block';
     loadUserBookings();
   } else {
     if(ne) ne.textContent='مرحباً بك';
     if(pe) pe.textContent='سجّل دخولك للمتابعة';
     if(lb) lb.style.display='block';
+    if(hb) hb.textContent='دخول';
     if(ac) ac.style.display='none';
+    if(ab) ab.style.display='none';
     if(bk) bk.style.display='none';
   }
 }
 
 // ===== ADD PROPERTY =====
 function submitProperty() {
+  if(!currentUser) { requireLogin('list'); return; }
   var name =document.getElementById('prop-name').value.trim();
   var type =document.getElementById('prop-type').value;
   var loc  =document.getElementById('prop-location').value.trim();
@@ -931,7 +1227,7 @@ function submitProperty() {
     name:name,type:type,location:loc,
     price:parseInt(price)||0,rooms:parseInt(rooms)||1,
     desc:desc,phone:phone,
-    owner:currentUser?currentUser.id:'anonymous',
+    owner:currentUser.id,
     status:'pending',timestamp:Date.now()
   };
 
@@ -953,9 +1249,66 @@ function submitProperty() {
   }
 }
 
+// ===== ADMIN MODERATION =====
+function openAdminPanel() {
+  if(!currentUser || !isAdmin) { alert('غير مصرح'); return; }
+  openModal('admin-modal');
+  loadPendingProperties();
+}
+
+function loadPendingProperties() {
+  var list=document.getElementById('admin-properties-list');
+  if(!list) return;
+  if(!db||!currentUser||!isAdmin){
+    list.innerHTML='<div style="text-align:center;padding:30px;color:var(--smoke)">غير مصرح</div>';
+    return;
+  }
+
+  db.ref('properties').orderByChild('status').equalTo('pending').once('value').then(function(snap){
+    var props=[];
+    snap.forEach(function(p){ props.unshift(Object.assign({id:p.key},p.val())); });
+    if(!props.length){
+      list.innerHTML='<div style="text-align:center;padding:30px;color:var(--smoke)">لا توجد عقارات معلقة</div>';
+      return;
+    }
+    list.innerHTML=props.map(function(p){
+      return '<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px">'+
+        '<div style="font-weight:700;font-size:14px;margin-bottom:4px">'+V.clean(p.name)+'</div>'+
+        '<div style="color:var(--smoke);font-size:12px;margin-bottom:8px">'+V.clean(p.location||'—')+' · '+V.clean(p.type||'—')+'</div>'+
+        '<div style="display:flex;justify-content:space-between;margin-bottom:10px">'+
+          '<span style="color:var(--smoke);font-size:12px">المالك</span>'+
+          '<span style="font-size:12px">'+V.clean(p.owner||'—')+'</span>'+
+        '</div>'+
+        (p.desc?'<div style="color:var(--smoke);font-size:12px;line-height:1.6;margin-bottom:12px">'+V.clean(p.desc)+'</div>':'')+
+        '<div style="display:flex;gap:8px">'+
+          '<button onclick="moderateProperty(\''+p.id+'\',\'rejected\')" style="flex:1;background:rgba(224,82,99,0.1);border:1px solid rgba(224,82,99,0.3);border-radius:12px;padding:12px;color:var(--red);font-family:Cairo,sans-serif;font-weight:700;font-size:13px;cursor:pointer">رفض</button>'+
+          '<button onclick="moderateProperty(\''+p.id+'\',\'approved\')" style="flex:2;background:linear-gradient(135deg,var(--gold),var(--gold-light));border:none;border-radius:12px;padding:12px;color:#000;font-family:Cairo,sans-serif;font-weight:700;font-size:13px;cursor:pointer">اعتماد</button>'+
+        '</div>'+
+      '</div>';
+    }).join('');
+  }).catch(function(){
+    list.innerHTML='<div style="text-align:center;padding:30px;color:var(--red)">تعذر تحميل العقارات المعلقة</div>';
+  });
+}
+
+function moderateProperty(propertyId, status) {
+  if(!db||!currentUser||!isAdmin) { alert('غير مصرح'); return; }
+  if(status!=='approved'&&status!=='rejected') return;
+  db.ref('properties/'+propertyId).update({
+    status: status,
+    moderatedBy: currentUser.id,
+    moderatedAt: Date.now()
+  }).then(function(){
+    loadPendingProperties();
+    loadProps();
+  }).catch(function(){
+    alert('تعذر تحديث حالة العقار');
+  });
+}
+
 // ===== OWNER PANEL =====
 function openOwnerPanel() {
-  if(!currentUser){ openModal('login-modal'); return; }
+  if(!currentUser){ openAuthModal('login'); return; }
   openModal('owner-modal');
   loadOwnerBookings();
 }
@@ -965,14 +1318,11 @@ function loadOwnerBookings() {
   if(!list) return;
   if(!db){ list.innerHTML='<div style="text-align:center;padding:30px;color:var(--smoke)">لا توجد حجوزات</div>'; return; }
 
-  db.ref('bookings').orderByChild('timestamp').limitToLast(20).on('value', function(snap) {
-    var bookings = [];
-    snap.forEach(function(b){ bookings.unshift(Object.assign({id:b.key},b.val())); });
+  db.ref('ownerBookings/'+currentUser.id).orderByChild('timestamp').limitToLast(20).on('value', function(snap) {
+    var myBookings = [];
+    snap.forEach(function(b){ myBookings.unshift(Object.assign({id:b.key},b.val())); });
 
     // فلتر حجوزات عقارات هذا المالك فقط
-    var myProps = allProps.filter(function(p){ return p.owner===currentUser.id; }).map(function(p){ return p.id; });
-    var myBookings = myProps.length ? bookings.filter(function(b){ return myProps.indexOf(b.propertyId)>-1; }) : bookings;
-
     if(!myBookings.length){
       list.innerHTML='<div style="text-align:center;padding:30px;color:var(--smoke)"><div style="font-size:40px;margin-bottom:10px">📭</div><p>لا توجد حجوزات بعد</p></div>';
       return;
@@ -1028,24 +1378,35 @@ function loadOwnerBookings() {
 
 function respondBooking(bookingId, response) {
   if(!db) return;
-  var updates = { status: response };
-  if(response==='approved') updates.approvedAt = Date.now();
-  if(response==='rejected') updates.rejectedAt = Date.now();
+  if(!currentUser || (response!=='approved' && response!=='rejected')) return;
 
-  db.ref('bookings/'+bookingId).update(updates).then(function(){
-    if(response==='approved'){
-      // إشعار الزبون بالقبول
-      db.ref('bookings/'+bookingId).once('value',function(snap){
-        var b=snap.val();
-        if(b){
-          // يمكن إضافة إشعار واتساب هنا
-          alert('✅ تمت الموافقة على الحجز — سيُطلب من الزبون دفع العربون: '+(b.deposit||'--')+' د.ل');
-        }
-      });
-    } else {
-      alert('تم رفض الحجز');
+  db.ref('ownerBookings/'+currentUser.id+'/'+bookingId).once('value').then(function(snap){
+    var booking = snap.val();
+    if(!booking || booking.status !== 'pending' || booking.ownerId !== currentUser.id || !booking.userId) {
+      alert('لا يمكن تحديث حالة هذا الحجز');
+      return;
     }
-    loadOwnerBookings();
+
+    booking.status = response;
+    if(response==='approved') booking.approvedAt = Date.now();
+    if(response==='rejected') booking.rejectedAt = Date.now();
+
+    var updates = {};
+    updates['bookings/'+bookingId] = booking;
+    updates['userBookings/'+booking.userId+'/'+bookingId] = booking;
+    updates['ownerBookings/'+currentUser.id+'/'+bookingId] = booking;
+    updates['propertyBookings/'+booking.propertyId+'/'+bookingId+'/status'] = response;
+
+    return db.ref().update(updates).then(function(){
+      if(response==='approved'){
+        alert('✅ تمت الموافقة على الحجز — سيُطلب من الزبون دفع العربون: '+(booking.deposit||'--')+' د.ل');
+      } else {
+        alert('تم رفض الحجز');
+      }
+      loadOwnerBookings();
+    });
+  }).catch(function(){
+    alert('تعذر تحديث حالة الحجز');
   });
 }
 
@@ -1058,7 +1419,7 @@ function loadUserBookings() {
   var STATUS_LABELS={pending:'⏳ بانتظار الموافقة',approved:'✅ تمت الموافقة — ادفع العربون',paid:'💰 تم الدفع',confirmed:'🎉 مؤكد',cancelled:'❌ ملغي',rejected:'❌ مرفوض'};
   var STATUS_COLORS={pending:'#D4A017',approved:'#27AE60',paid:'#0ABFBC',confirmed:'#276EF1',cancelled:'#E05263',rejected:'#E05263'};
 
-  db.ref('bookings').orderByChild('userId').equalTo(currentUser.id).limitToLast(10).on('value',function(snap){
+  db.ref('userBookings/'+currentUser.id).orderByChild('timestamp').limitToLast(10).on('value',function(snap){
     var bookings=[];
     snap.forEach(function(b){ bookings.unshift(Object.assign({id:b.key},b.val())); });
     if(!bookings.length){
@@ -1084,7 +1445,7 @@ function loadUserBookings() {
           '<div style="margin-top:10px;background:rgba(39,174,96,0.1);border:1px solid rgba(39,174,96,0.2);border-radius:10px;padding:10px;text-align:center">'+
             '<div style="color:var(--smoke);font-size:12px;margin-bottom:6px">ادفع العربون لتأكيد الحجز</div>'+
             '<div style="color:var(--gold);font-weight:900;font-size:18px;margin-bottom:8px">'+(b.deposit||'--')+' د.ل</div>'+
-            '<button onclick="payDeposit(\''+b.id+'\')" style="background:linear-gradient(135deg,var(--gold),var(--gold-light));border:none;border-radius:10px;padding:10px 20px;color:#000;font-family:Cairo,sans-serif;font-weight:700;cursor:pointer">دفع العربون الآن</button>'+
+            '<button onclick="payDeposit(\''+b.id+'\')" style="background:linear-gradient(135deg,var(--gold),var(--gold-light));border:none;border-radius:10px;padding:10px 20px;color:#000;font-family:Cairo,sans-serif;font-weight:700;cursor:pointer">تعليمات دفع العربون</button>'+
           '</div>':'')+
       '</div>';
     }).join('');
@@ -1092,16 +1453,7 @@ function loadUserBookings() {
 }
 
 function payDeposit(bookingId) {
-  // مرحلة أولى — محاكاة الدفع
-  // سيتم ربطه بـ ماسترباي.ly لاحقاً
-  if(confirm('هل تريد دفع العربون الآن؟\nسيتم تحويلك لبوابة الدفع.')){
-    if(db){
-      db.ref('bookings/'+bookingId).update({status:'paid',paidAt:Date.now()}).then(function(){
-        alert('✅ تم تسجيل طلب الدفع — سيتم التأكيد قريباً\n(سيتم ربط بوابة الدفع الإلكتروني قريباً)');
-        loadUserBookings();
-      });
-    }
-  }
+  alert('الدفع الإلكتروني قريباً.\nلا يتم تسجيل أي دفع أو تغيير حالة الحجز من التطبيق حالياً.\nيرجى التواصل مع المالك لتعليمات دفع العربون.');
 }
 
 // ===== INIT =====
@@ -1111,7 +1463,8 @@ function payDeposit(bookingId) {
   var co=document.getElementById('search-checkout');
   if(ci) ci.min=today;
   if(co) co.min=today;
-  if(currentUser) renderProfile();
+  if(auth) auth.onAuthStateChanged(setCurrentUserFromAuthUser);
+  else renderProfile();
   loadProps();
 })();
 </script>
