@@ -684,6 +684,10 @@ function openProp(id) {
   var em  = EMOJIS[p.type]||'🏠';
   var col = COLORS[Math.abs((p.id||'').charCodeAt(0)||0)%6];
   var fav = favorites.indexOf(id)>-1;
+  var isOwner = currentUser && currentUser.id && (
+    (p.owner && String(currentUser.id) === String(p.owner)) ||
+    (p.ownerId && String(currentUser.id) === String(p.ownerId))
+  );
 
   document.getElementById('detail-content').innerHTML =
     '<div class="modal-handle"></div>'+
@@ -708,7 +712,9 @@ function openProp(id) {
       '</div>'+
     '</div>'+
     (p.desc?'<p style="color:var(--smoke);font-size:13px;line-height:1.8;margin-bottom:16px">'+V.clean(p.desc)+'</p>':'')+
-    '<button class="btn-primary" onclick="bookNow(\''+id+'\')">📅 احجز الآن</button>'+
+    (isOwner?
+      '<button class="btn-secondary" disabled>هذا عقارك</button>':
+      '<button class="btn-primary" onclick="bookNow(\''+id+'\')">📅 احجز الآن</button>')+
     '<button class="btn-secondary" onclick="contactOwner(\''+V.clean(p.phone||'')+'\')">📞 تواصل مع المالك</button>';
 
   openModal('detail-modal');
