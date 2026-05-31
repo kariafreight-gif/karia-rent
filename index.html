@@ -192,8 +192,8 @@ html,body{min-height:100vh;background:var(--bg);color:var(--white);
     <span class="logo-sub">إيجار العقارات في ليبيا</span>
   </div>
   <div class="header-btns">
-    <button class="btn-login" id="header-login-btn" onclick="openModal('login-modal')">دخول</button>
-    <button class="btn-login" onclick="openModal('login-modal')">إنشاء حساب</button>
+    <button class="btn-login" id="header-login-btn" onclick="openAuthModal('login')">دخول</button>
+    <button class="btn-login" onclick="openAuthModal('signup')">إنشاء حساب</button>
     <button class="btn-list" onclick="currentUser?openOwnerPanel():requireLogin('list')">+ أضف عقارك</button>
   </div>
 </header>
@@ -329,7 +329,7 @@ html,body{min-height:100vh;background:var(--bg);color:var(--white);
       <div style="font-size:18px;font-weight:700;margin-bottom:4px" id="profile-name">مرحباً بك</div>
       <div style="color:var(--smoke);font-size:13px" id="profile-phone">سجّل دخولك للمتابعة</div>
     </div>
-    <button class="btn-primary" onclick="openModal('login-modal')" id="profile-login-btn">تسجيل الدخول</button>
+    <button class="btn-primary" onclick="openAuthModal('login')" id="profile-login-btn">تسجيل الدخول</button>
     <div id="profile-actions" style="display:none;margin-top:16px">
       <button class="btn-primary" onclick="openOwnerPanel()" style="margin-bottom:8px">🏠 لوحة المالك — حجوزاتي</button>
       <button class="btn-secondary" onclick="currentUser?openModal('list-modal'):requireLogin('list')">+ أضف عقاراً جديداً</button>
@@ -364,12 +364,12 @@ html,body{min-height:100vh;background:var(--bg);color:var(--white);
   <div class="modal-backdrop" onclick="closeModal('login-modal')"></div>
   <div class="modal-sheet">
     <div class="modal-handle"></div>
-    <div class="modal-title">تسجيل الدخول</div>
-    <div class="form-group">
+    <div class="modal-title" id="auth-modal-title">تسجيل الدخول</div>
+    <div class="form-group" id="auth-name-group">
       <label class="form-label">الاسم الكامل</label>
       <input type="text" class="form-field" id="login-name" placeholder="مثال: فرج المبروك" oninput="chkLogin()"/>
     </div>
-    <div class="form-group">
+    <div class="form-group" id="auth-phone-group">
       <label class="form-label">رقم الهاتف</label>
       <input type="tel" class="form-field" id="login-phone" placeholder="09xxxxxxxx" oninput="chkLogin()"/>
     </div>
@@ -381,8 +381,8 @@ html,body{min-height:100vh;background:var(--bg);color:var(--white);
       <label class="form-label">كلمة المرور</label>
       <input type="password" class="form-field" id="login-password" placeholder="6 أحرف على الأقل" oninput="chkLogin()" dir="ltr"/>
     </div>
-    <button class="btn-primary" id="login-btn" disabled onclick="doLogin()">تسجيل الدخول</button>
-    <button class="btn-secondary" id="signup-btn" disabled onclick="doSignup()">إنشاء حساب جديد</button>
+    <button class="btn-primary" id="login-btn" disabled onclick="submitAuthMode()">تسجيل الدخول</button>
+    <button class="btn-secondary" id="signup-btn" onclick="toggleAuthMode()">ليس لديك حساب؟ إنشاء حساب جديد</button>
     <button class="btn-secondary" onclick="closeModal('login-modal')">إلغاء</button>
   </div>
 </div>
@@ -522,6 +522,7 @@ var V = {
 var currentUser = null;
 var pendingAuthAction = null;
 var isAdmin = false;
+var authMode = 'login';
 var favorites   = JSON.parse(localStorage.getItem('kariaFavs')||'[]');
 var allProps    = [];
 var searchFilter_active = 'all';
@@ -961,14 +962,44 @@ function contactOwner(phone) {
 }
 
 // ===== AUTH =====
+function setAuthMode(mode) {
+  authMode = mode === 'signup' ? 'signup' : 'login';
+  var isSignup = authMode === 'signup';
+  var title = document.getElementById('auth-modal-title');
+  var nameGroup = document.getElementById('auth-name-group');
+  var phoneGroup = document.getElementById('auth-phone-group');
+  var loginBtn = document.getElementById('login-btn');
+  var signupBtn = document.getElementById('signup-btn');
+  if(title) title.textContent = isSignup ? 'إنشاء حساب جديد' : 'تسجيل الدخول';
+  if(nameGroup) nameGroup.style.display = isSignup ? 'block' : 'none';
+  if(phoneGroup) phoneGroup.style.display = isSignup ? 'block' : 'none';
+  if(loginBtn) loginBtn.textContent = isSignup ? 'إنشاء حساب جديد' : 'تسجيل الدخول';
+  if(signupBtn) signupBtn.textContent = isSignup ? 'لديك حساب؟ تسجيل الدخول' : 'ليس لديك حساب؟ إنشاء حساب جديد';
+  chkLogin();
+}
+
+function openAuthModal(mode) {
+  setAuthMode(mode);
+  openModal('login-modal');
+}
+
+function toggleAuthMode() {
+  setAuthMode(authMode === 'signup' ? 'login' : 'signup');
+}
+
+function submitAuthMode() {
+  if(authMode === 'signup') doSignup();
+  else doLogin();
+}
+
 function chkLogin() {
   var n=document.getElementById('login-name').value;
   var p=document.getElementById('login-phone').value;
   var e=document.getElementById('login-email').value.trim();
   var pw=document.getElementById('login-password').value;
   var hasAuth=/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)&&pw.length>=6;
-  document.getElementById('login-btn').disabled=!hasAuth;
-  document.getElementById('signup-btn').disabled=!(hasAuth&&V.name(n)&&V.phone(p));
+  var ready = authMode === 'signup' ? (hasAuth&&V.name(n)&&V.phone(p)) : hasAuth;
+  document.getElementById('login-btn').disabled=!ready;
 }
 
 function getAuthForm() {
@@ -982,7 +1013,7 @@ function getAuthForm() {
 
 function requireLogin(action) {
   pendingAuthAction = action || null;
-  openModal('login-modal');
+  openAuthModal('login');
 }
 
 function runPendingAuthAction() {
@@ -998,9 +1029,7 @@ function runPendingAuthAction() {
 
 function setLoginBusy(isBusy) {
   var loginBtn=document.getElementById('login-btn');
-  var signupBtn=document.getElementById('signup-btn');
   if(loginBtn) loginBtn.disabled=isBusy;
-  if(signupBtn) signupBtn.disabled=isBusy;
 }
 
 function setCurrentUserFromAuthUser(user) {
@@ -1235,7 +1264,7 @@ function moderateProperty(propertyId, status) {
 
 // ===== OWNER PANEL =====
 function openOwnerPanel() {
-  if(!currentUser){ openModal('login-modal'); return; }
+  if(!currentUser){ openAuthModal('login'); return; }
   openModal('owner-modal');
   loadOwnerBookings();
 }
