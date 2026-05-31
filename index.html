@@ -202,7 +202,7 @@ html,body{min-height:100vh;background:var(--bg);color:var(--white);
   <div class="hero">
     <div class="hero-tag">🏠 عقارات للإيجار في ليبيا</div>
     <h1 class="hero-title">ابحث عن<br/><span>مكانك المثالي</span></h1>
-    <p class="hero-sub">شقق، استراحات، وغرف للإيجار اليومي والشهري<br/>بأسعار شفافة وحجز مباشر</p>
+    <p class="hero-sub">شقق، استراحات، وفنادق للإيجار اليومي والشهري<br/>بأسعار شفافة وحجز مباشر</p>
   </div>
 
   <div style="padding:0 20px;margin-bottom:20px">
@@ -233,7 +233,7 @@ html,body{min-height:100vh;background:var(--bg);color:var(--white);
       <div class="filter-chip active" onclick="filterBy('all',this)">الكل</div>
       <div class="filter-chip" onclick="filterBy('apartment',this)">🏢 شقق</div>
       <div class="filter-chip" onclick="filterBy('rest',this)">🌴 استراحات</div>
-      <div class="filter-chip" onclick="filterBy('room',this)">🛏 غرف</div>
+      <div class="filter-chip" onclick="filterBy('room',this)">🏨 فنادق</div>
       <div class="filter-chip" onclick="filterBy('villa',this)">🏡 فيلات</div>
       <div class="filter-chip" onclick="filterBy('chalet',this)">⛺ شاليهات</div>
     </div>
@@ -265,7 +265,7 @@ html,body{min-height:100vh;background:var(--bg);color:var(--white);
     <div class="cat-grid">
       <div class="cat-card" onclick="filterBy('apartment',null)"><div class="cat-icon">🏢</div><div class="cat-name">شقق</div></div>
       <div class="cat-card" onclick="filterBy('rest',null)"><div class="cat-icon">🌴</div><div class="cat-name">استراحات</div></div>
-      <div class="cat-card" onclick="filterBy('room',null)"><div class="cat-icon">🛏</div><div class="cat-name">غرف</div></div>
+      <div class="cat-card" onclick="filterBy('room',null)"><div class="cat-icon">🏨</div><div class="cat-name">فنادق</div></div>
       <div class="cat-card" onclick="filterBy('villa',null)"><div class="cat-icon">🏡</div><div class="cat-name">فيلات</div></div>
     </div>
   </div>
@@ -295,7 +295,7 @@ html,body{min-height:100vh;background:var(--bg);color:var(--white);
       <div class="filter-chip active" onclick="searchFilter('all',this)">الكل</div>
       <div class="filter-chip" onclick="searchFilter('apartment',this)">🏢 شقق</div>
       <div class="filter-chip" onclick="searchFilter('rest',this)">🌴 استراحات</div>
-      <div class="filter-chip" onclick="searchFilter('room',this)">🛏 غرف</div>
+      <div class="filter-chip" onclick="searchFilter('room',this)">🏨 فنادق</div>
       <div class="filter-chip" onclick="searchFilter('villa',this)">🏡 فيلات</div>
     </div>
   </div>
@@ -536,9 +536,9 @@ var DEMO = [
 ];
 
 // ===== ICONS =====
-var EMOJIS = {apartment:'🏢',rest:'🌴',room:'🛏',villa:'🏡',chalet:'⛺'};
+var EMOJIS = {apartment:'🏢',rest:'🌴',room:'🏨',villa:'🏡',chalet:'⛺'};
 var COLORS  = ['bg-1','bg-2','bg-3','bg-4','bg-5','bg-6'];
-var LABELS  = {apartment:'شقة',rest:'استراحة',room:'غرفة',villa:'فيلا',chalet:'شاليه'};
+var LABELS  = {apartment:'شقة',rest:'استراحة',room:'فندق',villa:'فيلا',chalet:'شاليه'};
 
 // ===== CARD =====
 function card(p, wide) {
