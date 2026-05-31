@@ -193,6 +193,7 @@ html,body{min-height:100vh;background:var(--bg);color:var(--white);
   </div>
   <div class="header-btns">
     <button class="btn-login" id="header-login-btn" onclick="openModal('login-modal')">دخول</button>
+    <button class="btn-login" onclick="openModal('login-modal')">إنشاء حساب</button>
     <button class="btn-list" onclick="currentUser?openOwnerPanel():requireLogin('list')">+ أضف عقارك</button>
   </div>
 </header>
@@ -373,15 +374,15 @@ html,body{min-height:100vh;background:var(--bg);color:var(--white);
       <input type="tel" class="form-field" id="login-phone" placeholder="09xxxxxxxx" oninput="chkLogin()"/>
     </div>
     <div class="form-group">
-      <label class="form-label">Email</label>
-      <input type="email" class="form-field" id="login-email" placeholder="you@example.com" oninput="chkLogin()" dir="ltr"/>
+      <label class="form-label">البريد الإلكتروني</label>
+      <input type="email" class="form-field" id="login-email" placeholder="مثال: name@example.com" oninput="chkLogin()" dir="ltr"/>
     </div>
     <div class="form-group">
-      <label class="form-label">Password</label>
-      <input type="password" class="form-field" id="login-password" placeholder="Minimum 6 characters" oninput="chkLogin()" dir="ltr"/>
+      <label class="form-label">كلمة المرور</label>
+      <input type="password" class="form-field" id="login-password" placeholder="6 أحرف على الأقل" oninput="chkLogin()" dir="ltr"/>
     </div>
-    <button class="btn-primary" id="login-btn" disabled onclick="doLogin()">Sign in</button>
-    <button class="btn-secondary" id="signup-btn" disabled onclick="doSignup()">Create account</button>
+    <button class="btn-primary" id="login-btn" disabled onclick="doLogin()">تسجيل الدخول</button>
+    <button class="btn-secondary" id="signup-btn" disabled onclick="doSignup()">إنشاء حساب جديد</button>
     <button class="btn-secondary" onclick="closeModal('login-modal')">إلغاء</button>
   </div>
 </div>
@@ -1039,8 +1040,19 @@ function setCurrentUserFromAuthUser(user) {
   });
 }
 
+function getAuthErrorMessage(err) {
+  var messages = {
+    'auth/invalid-credential': 'البريد الإلكتروني أو كلمة المرور غير صحيحة. إذا لم يكن لديك حساب، اضغط إنشاء حساب جديد.',
+    'auth/email-already-in-use': 'هذا البريد الإلكتروني مستخدم بالفعل. جرّب تسجيل الدخول.',
+    'auth/weak-password': 'كلمة المرور ضعيفة. يجب أن تكون 6 أحرف على الأقل.',
+    'auth/invalid-email': 'يرجى إدخال بريد إلكتروني صحيح.',
+    'auth/network-request-failed': 'تعذر الاتصال بالإنترنت. تحقق من الشبكة وحاول مرة أخرى.'
+  };
+  return messages[err && err.code] || 'حدث خطأ غير متوقع. حاول مرة أخرى.';
+}
+
 function doLogin() {
-  if(!auth) { alert('Firebase Auth is not available'); return; }
+  if(!auth) { alert(getAuthErrorMessage()); return; }
   var f=getAuthForm();
   setLoginBusy(true);
   auth.signInWithEmailAndPassword(f.email,f.password).then(function(cred){
@@ -1053,7 +1065,7 @@ function doLogin() {
     if(auth.currentUser) setCurrentUserFromAuthUser(auth.currentUser);
     closeModal('login-modal');
   }).catch(function(err){
-    alert(err.message || 'Sign in failed');
+    alert(getAuthErrorMessage(err));
   }).finally(function(){
     setLoginBusy(false);
     chkLogin();
@@ -1061,7 +1073,7 @@ function doLogin() {
 }
 
 function doSignup() {
-  if(!auth) { alert('Firebase Auth is not available'); return; }
+  if(!auth) { alert(getAuthErrorMessage()); return; }
   var f=getAuthForm();
   if(!V.name(f.name)||!V.phone(f.phone)) return;
   setLoginBusy(true);
@@ -1075,7 +1087,7 @@ function doSignup() {
     if(auth.currentUser) setCurrentUserFromAuthUser(auth.currentUser);
     closeModal('login-modal');
   }).catch(function(err){
-    alert(err.message || 'Create account failed');
+    alert(getAuthErrorMessage(err));
   }).finally(function(){
     setLoginBusy(false);
     chkLogin();
