@@ -526,6 +526,7 @@ var currentUser = null;
 var pendingAuthAction = null;
 var isAdmin = false;
 var authMode = 'login';
+var bookingAvailabilitySeq = 0;
 var favorites   = JSON.parse(localStorage.getItem('kariaFavs')||'[]');
 var allProps    = [];
 var searchFilter_active = 'all';
@@ -756,18 +757,18 @@ function openBookingModal(p) {
       '<label class="form-label">تاريخ الوصول *</label>'+
       '<input type="hidden" id="book-checkin"/>'+
       '<div class="booking-date-grid">'+
-        '<input type="text" class="form-field date-part" id="book-checkin-day" inputmode="numeric" maxlength="2" placeholder="اليوم" oninput="syncBookingDate(\'checkin\','+p.price+')"/>'+
-        '<input type="text" class="form-field date-part" id="book-checkin-month" inputmode="numeric" maxlength="2" placeholder="الشهر" oninput="syncBookingDate(\'checkin\','+p.price+')"/>'+
-        '<input type="text" class="form-field date-part" id="book-checkin-year" inputmode="numeric" maxlength="4" placeholder="السنة" oninput="syncBookingDate(\'checkin\','+p.price+')"/>'+
+        '<input type="text" class="form-field date-part" id="book-checkin-day" inputmode="numeric" maxlength="2" placeholder="اليوم" oninput="syncBookingDate(\'checkin\',\''+p.id+'\','+p.price+')"/>'+
+        '<input type="text" class="form-field date-part" id="book-checkin-month" inputmode="numeric" maxlength="2" placeholder="الشهر" oninput="syncBookingDate(\'checkin\',\''+p.id+'\','+p.price+')"/>'+
+        '<input type="text" class="form-field date-part" id="book-checkin-year" inputmode="numeric" maxlength="4" placeholder="السنة" oninput="syncBookingDate(\'checkin\',\''+p.id+'\','+p.price+')"/>'+
       '</div>'+
     '</div>'+
     '<div class="form-group">'+
       '<label class="form-label">تاريخ المغادرة *</label>'+
       '<input type="hidden" id="book-checkout"/>'+
       '<div class="booking-date-grid">'+
-        '<input type="text" class="form-field date-part" id="book-checkout-day" inputmode="numeric" maxlength="2" placeholder="اليوم" oninput="syncBookingDate(\'checkout\','+p.price+')"/>'+
-        '<input type="text" class="form-field date-part" id="book-checkout-month" inputmode="numeric" maxlength="2" placeholder="الشهر" oninput="syncBookingDate(\'checkout\','+p.price+')"/>'+
-        '<input type="text" class="form-field date-part" id="book-checkout-year" inputmode="numeric" maxlength="4" placeholder="السنة" oninput="syncBookingDate(\'checkout\','+p.price+')"/>'+
+        '<input type="text" class="form-field date-part" id="book-checkout-day" inputmode="numeric" maxlength="2" placeholder="اليوم" oninput="syncBookingDate(\'checkout\',\''+p.id+'\','+p.price+')"/>'+
+        '<input type="text" class="form-field date-part" id="book-checkout-month" inputmode="numeric" maxlength="2" placeholder="الشهر" oninput="syncBookingDate(\'checkout\',\''+p.id+'\','+p.price+')"/>'+
+        '<input type="text" class="form-field date-part" id="book-checkout-year" inputmode="numeric" maxlength="4" placeholder="السنة" oninput="syncBookingDate(\'checkout\',\''+p.id+'\','+p.price+')"/>'+
       '</div>'+
     '</div>'+
     '<div class="form-group">'+
@@ -799,6 +800,7 @@ function openBookingModal(p) {
       '</div>'+
       '<p style="color:var(--smoke);font-size:11px;margin-top:10px;line-height:1.6">⚠️ لن يُطلب منك الدفع الآن — العربون يُدفع فقط بعد موافقة المالك خلال 24 ساعة.</p>'+
     '</div>'+
+    '<div id="booking-date-message" style="display:none;border-radius:12px;padding:12px;margin-bottom:14px;font-size:13px;text-align:center"></div>'+
     '<button class="btn-primary" id="confirm-booking-btn" disabled onclick="confirmBooking(\''+p.id+'\',\''+V.clean(p.name)+'\',\''+V.clean(p.phone||'')+'\',\''+V.clean(p.owner||p.ownerId||'')+'\','+p.price+')">إرسال طلب الحجز</button>'+
     '<button class="btn-secondary" onclick="closeModal(\'booking-modal\')">إلغاء</button>';
 
@@ -817,7 +819,7 @@ function daysInMonth(year, month) {
   return new Date(year, month, 0).getDate();
 }
 
-function syncBookingDate(kind, pricePerNight) {
+function syncBookingDate(kind, propId, pricePerNight) {
   var day = document.getElementById('book-'+kind+'-day');
   var month = document.getElementById('book-'+kind+'-month');
   var year = document.getElementById('book-'+kind+'-year');
@@ -841,7 +843,7 @@ function syncBookingDate(kind, pricePerNight) {
   hidden.value = valid
     ? String(y).padStart(4,'0')+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0')
     : '';
-  calcTotal('', pricePerNight);
+  calcTotal(propId, pricePerNight);
 }
 
 function calcTotal(propId, pricePerNight) {
@@ -849,23 +851,73 @@ function calcTotal(propId, pricePerNight) {
   var co=document.getElementById('book-checkout');
   var summary=document.getElementById('price-summary');
   var btn=document.getElementById('confirm-booking-btn');
-  if(!ci||!co||!ci.value||!co.value) { if(summary)summary.style.display='none'; if(btn)btn.disabled=true; return; }
+  var msg=document.getElementById('booking-date-message');
+  bookingAvailabilitySeq++;
+  if(!ci||!co||!ci.value||!co.value) {
+    if(summary)summary.style.display='none';
+    if(msg) msg.style.display='none';
+    if(btn)btn.disabled=true;
+    return;
+  }
 
   var d1=new Date(ci.value), d2=new Date(co.value);
   var nights=Math.round((d2-d1)/(1000*60*60*24));
-  if(nights<=0) { if(summary)summary.style.display='none'; if(btn)btn.disabled=true; return; }
+  if(nights<=0) {
+    if(summary)summary.style.display='none';
+    if(msg) msg.style.display='none';
+    if(btn)btn.disabled=true;
+    return;
+  }
 
   var total=nights*pricePerNight;
   var deposit=Math.ceil(total*0.25);
+  var checkSeq = bookingAvailabilitySeq;
+  if(summary) summary.style.display='none';
+  if(btn) btn.disabled=true;
+  if(msg) {
+    msg.textContent='جاري التحقق من توفر هذه الفترة...';
+    msg.style.display='block';
+    msg.style.background='rgba(201,168,76,0.08)';
+    msg.style.border='1px solid rgba(201,168,76,0.2)';
+    msg.style.color='var(--smoke)';
+  }
 
-  var nc=document.getElementById('nights-count');
-  var tp=document.getElementById('total-price');
-  var dp=document.getElementById('deposit-price');
-  if(nc) nc.textContent=nights+' ليلة';
-  if(tp) tp.textContent=total+' د.ل';
-  if(dp) dp.textContent=deposit+' د.ل';
-  if(summary) summary.style.display='block';
-  if(btn) btn.disabled=false;
+  checkPropertyAvailability(propId, ci.value, co.value).then(function(available){
+    if(checkSeq !== bookingAvailabilitySeq) return;
+    if(!available) {
+      if(summary) summary.style.display='none';
+      if(btn) btn.disabled=true;
+      if(msg) {
+        msg.textContent='هذه الفترة غير متاحة. اختر تواريخ أخرى.';
+        msg.style.display='block';
+        msg.style.background='rgba(224,82,99,0.1)';
+        msg.style.border='1px solid rgba(224,82,99,0.3)';
+        msg.style.color='var(--red)';
+      }
+      return;
+    }
+
+    var nc=document.getElementById('nights-count');
+    var tp=document.getElementById('total-price');
+    var dp=document.getElementById('deposit-price');
+    if(nc) nc.textContent=nights+' ليلة';
+    if(tp) tp.textContent=total+' د.ل';
+    if(dp) dp.textContent=deposit+' د.ل';
+    if(msg) msg.style.display='none';
+    if(summary) summary.style.display='block';
+    if(btn) btn.disabled=false;
+  }).catch(function(){
+    if(checkSeq !== bookingAvailabilitySeq) return;
+    if(summary) summary.style.display='none';
+    if(btn) btn.disabled=true;
+    if(msg) {
+      msg.textContent='تعذر التحقق من توفر هذه الفترة. حاول مرة أخرى.';
+      msg.style.display='block';
+      msg.style.background='rgba(224,82,99,0.1)';
+      msg.style.border='1px solid rgba(224,82,99,0.3)';
+      msg.style.color='var(--red)';
+    }
+  });
 }
 
 function datesOverlap(startA, endA, startB, endB) {
